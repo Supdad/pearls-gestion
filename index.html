@@ -13,7 +13,7 @@
         input:focus { border: 1px solid #00cccc; }
         button { width: 100%; padding: 15px; background: #00cccc; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
         button:hover { background: #009999; }
-        .message { margin-top: 15px; font-size: 14px; color: #ff4444; }
+        .message { margin-top: 15px; font-size: 14px; color: #ff4444; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -30,7 +30,7 @@
     </div>
 
     <script>
-        // --- C'EST ICI QUE TU DOIS METTRE TON LIEN GOOGLE ---
+        // --- TON LIEN GOOGLE ICI ---
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
 
         function tenterConnexion() {
@@ -44,41 +44,30 @@
                 return;
             }
 
-            // On change le bouton pour montrer que ça charge
             btn.innerText = "Vérification...";
             msgBox.innerText = "";
 
-            // Préparation des données à envoyer à Google Sheets
             const formData = new URLSearchParams();
             formData.append("action", "login");
             formData.append("nom", nom);
             formData.append("pin", pin);
 
-            // Envoi de la demande
-            fetch(urlWebScript, {
-                method: 'POST',
-                body: formData
-            })
+            fetch(urlWebScript, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
-                btn.innerText = "S'IDENTIFIER"; // On remet le bouton normal
+                btn.innerText = "S'IDENTIFIER";
 
-                if if (data.statut === "succes") {
+                if (data.statut === "succes") {
                     msgBox.style.color = "#00ff00"; 
-                    msgBox.innerText = "Accès autorisé ! Redirection en cours...";
+                    msgBox.innerText = "Accès autorisé ! Redirection...";
                     
-                    // La magie : on ouvre la caisse et on lui envoie le nom dans le lien
+                    // Redirection vers la caisse avec le nom
                     setTimeout(function() {
                         window.location.href = "caisse.html?nom=" + encodeURIComponent(nom);
-                    }, 1000); // Attend 1 seconde pour qu'il lise le message vert
-                    
-                }
-                    
-                    // (Plus tard, c'est ici qu'on mettra le code pour ouvrir la page de caisse)
+                    }, 1000);
                     
                 } else {
-                    // Si le code est faux
-                    msgBox.style.color = "#ff4444"; // Texte en rouge
+                    msgBox.style.color = "#ff4444"; 
                     msgBox.innerText = data.message;
                 }
             })

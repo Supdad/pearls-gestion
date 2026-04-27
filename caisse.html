@@ -6,32 +6,27 @@
     <title>Caisse Pearl's</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; padding: 20px; display: flex; gap: 20px; height: 90vh; }
-        
         .menu-section { flex: 2; background: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; }
         .categories { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 10px; }
         .btn-cat { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; white-space: nowrap; }
         .btn-cat.active { background: #00cccc; color: #111; }
-        
         .produits { display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; align-content: flex-start; }
         .btn-prod { background: #2a2a2a; border: 1px solid #444; color: white; padding: 15px; border-radius: 8px; cursor: pointer; width: calc(33% - 10px); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-prod:hover { border-color: #00cccc; background: #333; }
         .prod-nom { font-weight: bold; margin-bottom: 5px; text-align: center; }
         .prod-prix { color: #00cccc; }
-
         .ticket-section { flex: 1; background: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; border-left: 4px solid #00cccc; }
         .ticket-header { text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
         .ticket-liste { flex: 1; overflow-y: auto; }
         .ticket-item { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 10px; margin-bottom: 5px; border-radius: 5px; }
         .btn-remove { background: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px; font-weight: bold; }
-        
         .options-vente { background: #2a2a2a; padding: 15px; border-radius: 5px; margin-top: 10px; }
         .options-vente select { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; background: #444; color: white; border: none; border-radius: 5px; font-size: 14px; }
-        
         .ticket-total { font-size: 24px; text-align: center; padding: 15px; background: #111; border-radius: 5px; color: #00ff00; font-weight: bold; margin-top: 10px; }
         .btn-valider { width: 100%; padding: 15px; background: #00cccc; color: #111; border: none; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; transition: 0.2s; }
         .btn-valider:hover { background: #009999; }
-        
         #loading { text-align: center; color: #00cccc; font-size: 18px; margin-top: 50px; }
+        .employe-info { color: #888; font-size: 14px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -39,7 +34,6 @@
     <div class="menu-section">
         <h2 style="margin-top: 0; color: #00cccc;">MENU PEARL'S</h2>
         <div id="loading">Chargement du menu...</div>
-        
         <div class="categories" id="categories-container" style="display: none;"></div>
         <div class="produits" id="produits-container" style="display: none;"></div>
     </div>
@@ -47,6 +41,7 @@
     <div class="ticket-section">
         <div class="ticket-header">
             <h2 style="margin: 0;">TICKET EN COURS</h2>
+            <div class="employe-info" id="affichage-employe">Employé : ...</div>
         </div>
         
         <div class="ticket-liste" id="ticket-liste"></div>
@@ -57,7 +52,6 @@
                 <option value="Espèces">Espèces</option>
                 <option value="Carte Bancaire">Carte Bancaire</option>
             </select>
-
             <label>Lieu de vente :</label>
             <select id="choix-lieu">
                 <option value="Cuisine/Resto">Restaurant</option>
@@ -67,25 +61,25 @@
         </div>
 
         <div class="ticket-total">TOTAL : <span id="total-prix">0</span> $</div>
-        
         <button class="btn-valider" id="btn-valider" onclick="validerCommande()">VALIDER LA COMMANDE</button>
     </div>
 
     <script>
-        // --- N'OUBLIE PAS DE METTRE TON LIEN GOOGLE ICI (Ligne 107) ---
+        // --- TON LIEN GOOGLE ICI ---
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
         
-        let menuComplet = [];
-        let panier = [];
-        // On récupère le nom depuis l'URL de la page
+        // --- RECUPERATION DU NOM DE L'EMPLOYE ---
         const parametresUrl = new URLSearchParams(window.location.search);
         let nomEmploye = parametresUrl.get("nom");
         
-        // Sécurité : si quelqu'un ouvre la caisse sans se connecter
         if (!nomEmploye) {
             nomEmploye = "Employé Inconnu";
-            alert("Attention : Vous n'êtes pas connecté proprement !");
+            alert("Attention : Vous avez ouvert la caisse sans vous connecter !");
         }
+        document.getElementById('affichage-employe').innerText = "Employé : " + nomEmploye;
+
+        let menuComplet = [];
+        let panier = [];
 
         window.onload = function() {
             const formData = new URLSearchParams();
@@ -109,7 +103,6 @@
             const categories = [...new Set(menuComplet.map(p => p.categorie))];
             const catContainer = document.getElementById('categories-container');
             catContainer.innerHTML = '';
-
             categories.forEach((cat, index) => {
                 let btn = document.createElement('button');
                 btn.className = index === 0 ? 'btn-cat active' : 'btn-cat';
@@ -121,16 +114,13 @@
                 };
                 catContainer.appendChild(btn);
             });
-
             if(categories.length > 0) { afficherProduits(categories[0]); }
         }
 
         function afficherProduits(categorieCible) {
             const prodContainer = document.getElementById('produits-container');
             prodContainer.innerHTML = '';
-
             const produitsFiltres = menuComplet.filter(p => p.categorie === categorieCible);
-
             produitsFiltres.forEach(prod => {
                 let btn = document.createElement('button');
                 btn.className = 'btn-prod';
@@ -156,17 +146,14 @@
             const ticketListe = document.getElementById('ticket-liste');
             ticketListe.innerHTML = '';
             let total = 0;
-
             panier.forEach((item, index) => {
                 let totalLigne = item.prix * item.quantite;
                 total += totalLigne;
-
                 let div = document.createElement('div');
                 div.className = 'ticket-item';
                 div.innerHTML = `<span>${item.quantite}x ${item.nom}</span><span>${totalLigne}$ <button class="btn-remove" onclick="retirerDuPanier(${index})">X</button></span>`;
                 ticketListe.appendChild(div);
             });
-
             document.getElementById('total-prix').innerText = total;
         }
 
@@ -180,7 +167,6 @@
             btnValider.innerText = "ENVOI EN COURS...";
             btnValider.style.background = "#ffcc00";
 
-            // Préparer le résumé des articles (ex: "2x Vodka, 1x Frites")
             let resumeArticles = panier.map(item => `${item.quantite}x ${item.nom}`).join(", ");
             let total = document.getElementById('total-prix').innerText;
             let paiement = document.getElementById('choix-paiement').value;
@@ -193,13 +179,13 @@
             formData.append("total", total);
             formData.append("paiement", paiement);
             formData.append("lieu", lieu);
+            formData.append("panier", JSON.stringify(panier));
 
             fetch(urlWebScript, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 if(data.statut === "succes") {
                     alert("✅ Vente enregistrée avec succès !");
-                    // On vide le panier pour le client suivant
                     panier = [];
                     mettreAJourTicket();
                     btnValider.innerText = "VALIDER LA COMMANDE";
