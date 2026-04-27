@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pearl's - Connexion</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 204, 204, 0.2); text-align: center; width: 300px; border-top: 4px solid #00cccc; }
+        h1 { color: #00cccc; margin-bottom: 5px; letter-spacing: 2px; font-size: 24px; }
+        p { color: #888; font-size: 12px; margin-bottom: 30px; }
+        input { width: 90%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: none; background: #2a2a2a; color: white; font-size: 16px; text-align: center; outline: none; }
+        input:focus { border: 1px solid #00cccc; }
+        button { width: 100%; padding: 15px; background: #00cccc; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+        button:hover { background: #009999; }
+        .message { margin-top: 15px; font-size: 14px; color: #ff4444; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h1>PEARL'S</h1>
+        <p>SYSTÈME DE GESTION</p>
+
+        <input type="text" id="inputNom" placeholder="Nom du salarié" autocomplete="off">
+        <input type="password" id="inputPin" placeholder="Code PIN (6 chiffres)" maxlength="6" autocomplete="off">
+        
+        <button id="btnConnexion" onclick="tenterConnexion()">S'IDENTIFIER</button>
+        <div id="messageErreur" class="message"></div>
+    </div>
+
+    <script>
+        // --- C'EST ICI QUE TU DOIS METTRE TON LIEN GOOGLE ---
+        const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
+
+        function tenterConnexion() {
+            const nom = document.getElementById("inputNom").value;
+            const pin = document.getElementById("inputPin").value;
+            const msgBox = document.getElementById("messageErreur");
+            const btn = document.getElementById("btnConnexion");
+
+            if (nom === "" || pin === "") {
+                msgBox.innerText = "Veuillez remplir tous les champs.";
+                return;
+            }
+
+            // On change le bouton pour montrer que ça charge
+            btn.innerText = "Vérification...";
+            msgBox.innerText = "";
+
+            // Préparation des données à envoyer à Google Sheets
+            const formData = new URLSearchParams();
+            formData.append("action", "login");
+            formData.append("nom", nom);
+            formData.append("pin", pin);
+
+            // Envoi de la demande
+            fetch(urlWebScript, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerText = "S'IDENTIFIER"; // On remet le bouton normal
+
+                if if (data.statut === "succes") {
+                    msgBox.style.color = "#00ff00"; 
+                    msgBox.innerText = "Accès autorisé ! Redirection en cours...";
+                    
+                    // La magie : on ouvre la caisse et on lui envoie le nom dans le lien
+                    setTimeout(function() {
+                        window.location.href = "caisse.html?nom=" + encodeURIComponent(nom);
+                    }, 1000); // Attend 1 seconde pour qu'il lise le message vert
+                    
+                }
+                    
+                    // (Plus tard, c'est ici qu'on mettra le code pour ouvrir la page de caisse)
+                    
+                } else {
+                    // Si le code est faux
+                    msgBox.style.color = "#ff4444"; // Texte en rouge
+                    msgBox.innerText = data.message;
+                }
+            })
+            .catch(error => {
+                btn.innerText = "S'IDENTIFIER";
+                msgBox.innerText = "Erreur de connexion avec le serveur.";
+            });
+        }
+    </script>
+</body>
+</html>
