@@ -27,13 +27,21 @@
         .btn-valider:hover { background: #009999; }
         #loading { text-align: center; color: #00cccc; font-size: 18px; margin-top: 50px; }
         .employe-info { color: #888; font-size: 14px; margin-top: 5px; }
+        
+        /* CSS DU POP-UP DES MENUS */
+        #modal-menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: #1e1e1e; padding: 25px; border-radius: 10px; border-top: 4px solid #00cccc; width: 350px; text-align: center; }
+        .modal-box label { display: block; text-align: left; margin-top: 15px; color: #aaa; font-size: 14px; }
+        .modal-box select { width: 100%; padding: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; margin-top: 5px; font-size: 16px; }
+        .btn-modal-valider { background: #00cccc; color: #111; padding: 12px; width: 100%; margin-top: 20px; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        .btn-modal-annuler { background: transparent; color: #888; border: 1px solid #555; padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="menu-section">
         <h2 style="margin-top: 0; color: #00cccc;">MENU PEARL'S</h2>
-        <div id="loading">Chargement du menu...</div>
+        <div id="loading">Chargement du catalogue...</div>
         <div class="categories" id="categories-container" style="display: none;"></div>
         <div class="produits" id="produits-container" style="display: none;"></div>
     </div>
@@ -43,51 +51,90 @@
             <h2 style="margin: 0;">TICKET EN COURS</h2>
             <div class="employe-info" id="affichage-employe">Employé : ...</div>
         </div>
-        
         <div class="ticket-liste" id="ticket-liste"></div>
-        
         <div class="options-vente">
-            <label>Moyen de paiement :</label>
-            <select id="choix-paiement">
-                <option value="Espèces">Espèces</option>
-                <option value="Carte Bancaire">Carte Bancaire</option>
-            </select>
-            <label>Lieu de vente :</label>
-            <select id="choix-lieu">
-                <option value="Cuisine/Resto">Restaurant</option>
-                <option value="Food Truck">Food Truck</option>
-                <option value="Livraison">Livraison</option>
-            </select>
+            <label>Paiement :</label>
+            <select id="choix-paiement"><option>Espèces</option><option>Carte Bancaire</option></select>
+            <label>Lieu :</label>
+            <select id="choix-lieu"><option>Cuisine/Resto</option><option>Food Truck</option><option>Livraison</option></select>
         </div>
-
         <div class="ticket-total">TOTAL : <span id="total-prix">0</span> $</div>
         <button class="btn-valider" id="btn-valider" onclick="validerCommande()">VALIDER LA COMMANDE</button>
+    </div>
+
+    <!-- LE POP-UP POUR LES MENUS -->
+    <div id="modal-menu">
+        <div class="modal-box">
+            <h3 id="modal-titre" style="color:#00cccc; margin-top:0;">Composition du Menu</h3>
+            <div id="modal-choix"></div>
+            <button class="btn-modal-valider" onclick="validerMenu()">AJOUTER AU TICKET</button>
+            <button class="btn-modal-annuler" onclick="fermerModal()">ANNULER</button>
+        </div>
     </div>
 
     <script>
         // --- TON LIEN GOOGLE ICI ---
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
         
-        // --- RECUPERATION DU NOM DE L'EMPLOYE ---
         const parametresUrl = new URLSearchParams(window.location.search);
-        let nomEmploye = parametresUrl.get("nom");
-        
-        if (!nomEmploye) {
-            nomEmploye = "Employé Inconnu";
-            alert("Attention : Vous avez ouvert la caisse sans vous connecter !");
-        }
+        let nomEmploye = parametresUrl.get("nom") || "Employé Inconnu";
         document.getElementById('affichage-employe').innerText = "Employé : " + nomEmploye;
 
         let menuComplet = [];
         let panier = [];
+        let menuEnCours = null; // Mémorise le menu qu'on est en train de composer
+
+        // --- DÉFINITION DE TES 6 MENUS ---
+        // (Attention à respecter l'orthographe exacte de l'onglet CATALOGUE)
+        // --- DÉFINITION DE TES 6 MENUS (TOUT EN MINUSCULES) ---
+        const listeMenus = {
+            "menu soft": { 
+                etapes: [
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] },
+                    { titre: "Plat", options: "TOUS_LES_PLATS" }
+                ],
+                fixes: ["frites"] 
+            },
+            "menu gourmand": {
+                etapes: [
+                    { titre: "Plat", options: "TOUS_LES_PLATS" },
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] },
+                    { titre: "Dessert", options: ["cookie", "pancakes", "fondant au chocolat"] }
+                ],
+                fixes: []
+            },
+            "menu alcool": {
+                etapes: [
+                    { titre: "Plat", options: "TOUS_LES_PLATS" },
+                    { titre: "Alcool", options: ["vodka", "whisky", "martini blanc", "téquila", "rhum", "jaggermaster"] }
+                ],
+                fixes: []
+            },
+            "menu grand large": {
+                etapes: [
+                    { titre: "Plat", options: ["Plat merlan frit", "Plat écrevisse"] },
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }
+                ],
+                fixes: []
+            },
+            "menu rivage": {
+                etapes: [
+                    { titre: "Plat", options: ["Plat huitre", "Plat crevette", "Plat bulot"] },
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }
+                ],
+                fixes: []
+            },
+            "menu moussaillon": {
+                etapes: [
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }
+                ],
+                fixes: ["Plat morue"] 
+            }
+        };
 
         window.onload = function() {
-            const formData = new URLSearchParams();
-            formData.append("action", "getMenu");
-
-            fetch(urlWebScript, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
+            const fd = new URLSearchParams(); fd.append("action", "getMenu");
+            fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
                 if(data.statut === "succes") {
                     menuComplet = data.menu;
                     document.getElementById('loading').style.display = 'none';
@@ -95,8 +142,7 @@
                     document.getElementById('produits-container').style.display = 'flex';
                     afficherCategories();
                 }
-            })
-            .catch(error => alert("Erreur de chargement du menu."));
+            });
         };
 
         function afficherCategories() {
@@ -120,27 +166,90 @@
         function afficherProduits(categorieCible) {
             const prodContainer = document.getElementById('produits-container');
             prodContainer.innerHTML = '';
-            const produitsFiltres = menuComplet.filter(p => p.categorie === categorieCible);
-            produitsFiltres.forEach(prod => {
+            const prods = menuComplet.filter(p => p.categorie === categorieCible);
+            prods.forEach(prod => {
                 let btn = document.createElement('button');
                 btn.className = 'btn-prod';
                 btn.innerHTML = `<span class="prod-nom">${prod.nom}</span><span class="prod-prix">${prod.prix} $</span>`;
-                btn.onclick = function() { ajouterAuPanier(prod.nom, prod.prix); };
+                
+                // On vérifie si c'est un Menu ou un Produit Normal
+                let isMenu = Object.keys(listeMenus).find(k => k.toLowerCase() === prod.nom.toLowerCase());
+                
+                if(isMenu) {
+                    btn.onclick = function() { ouvrirModalMenu(isMenu, prod.prix); };
+                } else {
+                    btn.onclick = function() { ajouterProduitFinal(prod.nom, prod.prix, [prod.nom]); };
+                }
+                
                 prodContainer.appendChild(btn);
             });
         }
 
-        function ajouterAuPanier(nom, prix) {
+        // --- GESTION DU POP-UP DES MENUS ---
+        function ouvrirModalMenu(nomMenu, prix) {
+            menuEnCours = { nom: nomMenu, prix: prix, config: listeMenus[nomMenu] };
+            document.getElementById("modal-titre").innerText = "Composition : " + nomMenu;
+            
+            let htmlChoix = "";
+            menuEnCours.config.etapes.forEach((etape, index) => {
+                htmlChoix += `<label>${etape.titre}</label>`;
+                htmlChoix += `<select id="choix-menu-${index}">`;
+                
+                let optionsPossibles = etape.options;
+                
+                // Si le plat est libre, on fouille le menu complet pour trouver les plats
+                if (optionsPossibles === "TOUS_LES_PLATS") {
+                    optionsPossibles = menuComplet.filter(p => p.categorie.toLowerCase().includes("plat")).map(p => p.nom);
+                    if(optionsPossibles.length === 0) optionsPossibles = ["Erreur : Aucun plat trouvé"];
+                }
+                
+                optionsPossibles.forEach(opt => {
+                    htmlChoix += `<option value="${opt}">${opt}</option>`;
+                });
+                htmlChoix += `</select>`;
+            });
+            
+            document.getElementById("modal-choix").innerHTML = htmlChoix;
+            document.getElementById("modal-menu").style.display = "flex";
+        }
+
+        function fermerModal() {
+            document.getElementById("modal-menu").style.display = "none";
+            menuEnCours = null;
+        }
+
+        function validerMenu() {
+            let listePourStock = [];
+            let resumeTicket = [];
+            
+            // 1. On récupère ce que l'employé a sélectionné
+            menuEnCours.config.etapes.forEach((etape, index) => {
+                let choix = document.getElementById(`choix-menu-${index}`).value;
+                listePourStock.push(choix);
+                resumeTicket.push(choix);
+            });
+            
+            // 2. On ajoute les produits obligatoires du menu (ex: frites, morue)
+            if (menuEnCours.config.fixes) {
+                menuEnCours.config.fixes.forEach(fixe => { listePourStock.push(fixe); });
+            }
+            
+            // 3. On crée le nom qui apparaîtra sur le ticket
+            let nomFinalTicket = `${menuEnCours.nom} (${resumeTicket.join(" + ")})`;
+            
+            ajouterProduitFinal(nomFinalTicket, menuEnCours.prix, listePourStock);
+            fermerModal();
+        }
+
+        // --- AJOUT AU PANIER ET VALIDATION ---
+        function ajouterProduitFinal(nom, prix, elementsADeduire) {
             let articleExistant = panier.find(item => item.nom === nom);
             if(articleExistant) { articleExistant.quantite++; } 
-            else { panier.push({ nom: nom, prix: prix, quantite: 1 }); }
+            else { panier.push({ nom: nom, prix: prix, quantite: 1, articlesADeduire: elementsADeduire }); }
             mettreAJourTicket();
         }
 
-        function retirerDuPanier(index) {
-            panier.splice(index, 1);
-            mettreAJourTicket();
-        }
+        function retirerDuPanier(index) { panier.splice(index, 1); mettreAJourTicket(); }
 
         function mettreAJourTicket() {
             const ticketListe = document.getElementById('ticket-liste');
@@ -158,42 +267,28 @@
         }
 
         function validerCommande() {
-            if(panier.length === 0) {
-                alert("Le ticket est vide !");
-                return;
-            }
-
+            if(panier.length === 0) return alert("Le ticket est vide !");
             const btnValider = document.getElementById('btn-valider');
             btnValider.innerText = "ENVOI EN COURS...";
             btnValider.style.background = "#ffcc00";
 
-            let resumeArticles = panier.map(item => `${item.quantite}x ${item.nom}`).join(", ");
-            let total = document.getElementById('total-prix').innerText;
-            let paiement = document.getElementById('choix-paiement').value;
-            let lieu = document.getElementById('choix-lieu').value;
+            let resumeArticles = panier.map(item => `${item.quantite}x ${item.nom}`).join("\n");
+            
+            const fd = new URLSearchParams();
+            fd.append("action", "nouvelleVente");
+            fd.append("nom", nomEmploye);
+            fd.append("articles", resumeArticles);
+            fd.append("total", document.getElementById('total-prix').innerText);
+            fd.append("paiement", document.getElementById('choix-paiement').value);
+            fd.append("lieu", document.getElementById('choix-lieu').value);
+            fd.append("panier", JSON.stringify(panier));
 
-            const formData = new URLSearchParams();
-            formData.append("action", "nouvelleVente");
-            formData.append("nom", nomEmploye);
-            formData.append("articles", resumeArticles);
-            formData.append("total", total);
-            formData.append("paiement", paiement);
-            formData.append("lieu", lieu);
-            formData.append("panier", JSON.stringify(panier));
-
-            fetch(urlWebScript, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
+            fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
                 if(data.statut === "succes") {
-                    alert("✅ Vente enregistrée avec succès !");
-                    panier = [];
-                    mettreAJourTicket();
-                    btnValider.innerText = "VALIDER LA COMMANDE";
-                    btnValider.style.background = "#00cccc";
+                    alert("✅ Vente enregistrée !");
+                    panier = []; mettreAJourTicket();
                 }
-            })
-            .catch(error => {
-                alert("❌ Erreur lors de l'enregistrement.");
+            }).catch(() => alert("❌ Erreur d'enregistrement")).finally(() => {
                 btnValider.innerText = "VALIDER LA COMMANDE";
                 btnValider.style.background = "#00cccc";
             });
