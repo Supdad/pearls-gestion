@@ -3,48 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pearl's - Connexion</title>
+    <title>Connexion Staff - Pearl's</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .login-box { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 204, 204, 0.2); text-align: center; width: 300px; border-top: 4px solid #00cccc; }
-        h1 { color: #00cccc; margin-bottom: 5px; letter-spacing: 2px; font-size: 24px; }
-        p { color: #888; font-size: 12px; margin-bottom: 30px; }
-        input { width: 90%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: none; background: #2a2a2a; color: white; font-size: 16px; text-align: center; outline: none; }
-        input:focus { border: 1px solid #00cccc; }
+        h1 { color: #00cccc; margin-bottom: 30px; letter-spacing: 2px; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box; }
+        input:focus { border-color: #00cccc; outline: none; }
         button { width: 100%; padding: 15px; background: #00cccc; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
         button:hover { background: #009999; }
-        .message { margin-top: 15px; font-size: 14px; color: #ff4444; font-weight: bold; }
+        .message { margin-top: 15px; font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="login-box">
-        <h1>PEARL'S</h1>
-        <p>SYSTÈME DE GESTION</p>
-
-        <input type="text" id="inputNom" placeholder="Nom du salarié" autocomplete="off">
-        <input type="password" id="inputPin" placeholder="Code PIN (6 chiffres)" maxlength="6" autocomplete="off">
-        
-        <button id="btnConnexion" onclick="tenterConnexion()">S'IDENTIFIER</button>
-        <div id="messageErreur" class="message"></div>
+        <h1>ACCÈS STAFF</h1>
+        <input type="text" id="nom" placeholder="Votre Nom">
+        <input type="password" id="pin" placeholder="Code PIN">
+        <button id="btn-login" onclick="connexion()">SE CONNECTER</button>
+        <div id="message-info" class="message"></div>
     </div>
 
     <script>
         // --- TON LIEN GOOGLE ICI ---
-        const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
+        const urlWebScript = "COLLE_TON_LIEN_ICI";
 
-        function tenterConnexion() {
-            const nom = document.getElementById("inputNom").value;
-            const pin = document.getElementById("inputPin").value;
-            const msgBox = document.getElementById("messageErreur");
-            const btn = document.getElementById("btnConnexion");
+        function connexion() {
+            const nom = document.getElementById("nom").value;
+            const pin = document.getElementById("pin").value;
+            const msgBox = document.getElementById("message-info");
+            const btn = document.getElementById("btn-login");
 
             if (nom === "" || pin === "") {
+                msgBox.style.color = "#ff4444";
                 msgBox.innerText = "Veuillez remplir tous les champs.";
                 return;
             }
 
-            btn.innerText = "Vérification...";
+            btn.innerText = "VÉRIFICATION...";
             msgBox.innerText = "";
 
             const formData = new URLSearchParams();
@@ -55,32 +51,30 @@
             fetch(urlWebScript, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
-                btn.innerText = "S'IDENTIFIER";
-
-                // Remplace le bloc à l'intérieur du if (data.statut === "succes") par celui-ci :
-
+                btn.innerText = "SE CONNECTER";
                 if (data.statut === "succes") {
                     msgBox.style.color = "#00ff00"; 
                     msgBox.innerText = "Accès autorisé ! Redirection...";
                     
-                    // On regarde où le salarié voulait aller (Caisse ou Cuisine)
+                    // --- LA MAGIE EST ICI ---
+                    // On lit l'adresse URL pour savoir d'où vient l'employé
                     const params = new URLSearchParams(window.location.search);
-                    const target = params.get("target") || "caisse"; // Par défaut vers la caisse
+                    const target = params.get("target") || "caisse"; // Si pas de cible, go caisse par défaut
                     const pageDest = (target === "cuisine") ? "cuisine.html" : "caisse.html";
 
                     setTimeout(function() {
                         window.location.href = pageDest + "?nom=" + encodeURIComponent(nom);
                     }, 1000);
-                }
                     
                 } else {
                     msgBox.style.color = "#ff4444"; 
-                    msgBox.innerText = data.message;
+                    msgBox.innerText = "❌ Nom ou PIN incorrect.";
                 }
             })
             .catch(error => {
-                btn.innerText = "S'IDENTIFIER";
-                msgBox.innerText = "Erreur de connexion avec le serveur.";
+                btn.innerText = "SE CONNECTER";
+                msgBox.style.color = "#ff4444"; 
+                msgBox.innerText = "Erreur de communication avec le serveur.";
             });
         }
     </script>
