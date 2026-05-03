@@ -11,10 +11,11 @@
         .btn-cat { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; white-space: nowrap; }
         .btn-cat.active { background: #00cccc; color: #111; }
         .produits { display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; align-content: flex-start; }
-        .btn-prod { background: #2a2a2a; border: 1px solid #444; color: white; padding: 15px; border-radius: 8px; cursor: pointer; width: calc(33% - 10px); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-prod { background: #2a2a2a; border: 1px solid #444; color: white; padding: 15px; border-radius: 8px; cursor: pointer; width: calc(33% - 10px); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
         .btn-prod:hover { border-color: #00cccc; background: #333; }
         .prod-nom { font-weight: bold; margin-bottom: 5px; text-align: center; }
         .prod-prix { color: #00cccc; }
+        .prod-stock { font-size: 12px; margin-top: 5px; font-weight: bold; padding: 3px 8px; border-radius: 10px; background: rgba(0,0,0,0.5); }
         .ticket-section { flex: 1; background: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; border-left: 4px solid #00cccc; }
         .ticket-header { text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; }
         .ticket-liste { flex: 1; overflow-y: auto; }
@@ -28,7 +29,6 @@
         #loading { text-align: center; color: #00cccc; font-size: 18px; margin-top: 50px; }
         .employe-info { color: #888; font-size: 14px; margin-top: 5px; }
         
-        /* CSS DU POP-UP DES MENUS */
         #modal-menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
         .modal-box { background: #1e1e1e; padding: 25px; border-radius: 10px; border-top: 4px solid #00cccc; width: 350px; text-align: center; }
         .modal-box label { display: block; text-align: left; margin-top: 15px; color: #aaa; font-size: 14px; }
@@ -55,17 +55,20 @@
         <div class="options-vente">
             <label>Paiement :</label>
             <select id="choix-paiement"><option>Espèces</option><option>Carte Bancaire</option></select>
-            <label>Lieu :</label>
-            <select id="choix-lieu"><option>Cuisine/Resto</option><option>Food Truck</option><option>Livraison</option></select>
+            <label>Lieu (Influence les stocks) :</label>
+            <select id="choix-lieu" onchange="rafraichirLieu()">
+                <option value="Cuisine/Resto">Restaurant</option>
+                <option value="Food Truck">Food Truck</option>
+                <option value="Livraison">Livraison</option>
+            </select>
         </div>
         <div class="ticket-total">TOTAL : <span id="total-prix">0</span> $</div>
         <button class="btn-valider" id="btn-valider" onclick="validerCommande()">VALIDER LA COMMANDE</button>
     </div>
 
-    <!-- LE POP-UP POUR LES MENUS -->
     <div id="modal-menu">
         <div class="modal-box">
-            <h3 id="modal-titre" style="color:#00cccc; margin-top:0;">Composition du Menu</h3>
+            <h3 id="modal-titre" style="color:#00cccc; margin-top:0;">Composition</h3>
             <div id="modal-choix"></div>
             <button class="btn-modal-valider" onclick="validerMenu()">AJOUTER AU TICKET</button>
             <button class="btn-modal-annuler" onclick="fermerModal()">ANNULER</button>
@@ -82,53 +85,50 @@
 
         let menuComplet = [];
         let panier = [];
-        let menuEnCours = null; // Mémorise le menu qu'on est en train de composer
+        let menuEnCours = null; 
 
-        // --- DÉFINITION DE TES 6 MENUS ---
-        // (Attention à respecter l'orthographe exacte de l'onglet CATALOGUE)
-        // --- DÉFINITION DE TES 6 MENUS (TOUT EN MINUSCULES) ---
-        const listeMenus = {
+       const listeMenus = {
             "menu soft": { 
                 etapes: [
-                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] },
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }, 
                     { titre: "Plat", options: "TOUS_LES_PLATS" }
-                ],
+                ], 
                 fixes: ["frites"] 
             },
-            "menu gourmand": {
+            "menu gourmand": { 
                 etapes: [
-                    { titre: "Plat", options: "TOUS_LES_PLATS" },
-                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] },
+                    { titre: "Plat", options: "TOUS_LES_PLATS" }, 
+                    { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }, 
                     { titre: "Dessert", options: ["cookie", "pancakes", "fondant au chocolat"] }
-                ],
-                fixes: []
+                ], 
+                fixes: [] 
             },
-            "menu alcool": {
+            "menu alcool": { 
                 etapes: [
-                    { titre: "Plat", options: "TOUS_LES_PLATS" },
-                    { titre: "Alcool", options: ["vodka", "whisky", "martini blanc", "téquila", "rhum", "jaggermaster"] }
-                ],
-                fixes: []
+                    { titre: "Plat", options: "TOUS_LES_PLATS" }, 
+                    { titre: "Alcool", options: ["vodka", "whisky", "martini blanc", "téquila", "rhum", "jägermeister"] }
+                ], 
+                fixes: [] 
             },
-            "menu grand large": {
+            "menu grand large": { 
                 etapes: [
-                    { titre: "Plat", options: ["Plat merlan frit", "Plat écrevisse"] },
+                    { titre: "Plat", options: ["merlan frit", "écrevisse"] }, 
                     { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }
-                ],
-                fixes: []
+                ], 
+                fixes: [] 
             },
-            "menu rivage": {
+            "menu rivage": { 
                 etapes: [
-                    { titre: "Plat", options: ["Plat huitre", "Plat crevette", "Plat bulot"] },
+                    { titre: "Plat", options: ["huître", "crevettes", "bulots"] }, 
                     { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }
-                ],
-                fixes: []
+                ], 
+                fixes: [] 
             },
-            "menu moussaillon": {
+            "menu moussaillon": { 
                 etapes: [
                     { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }
-                ],
-                fixes: ["Plat morue"] 
+                ], 
+                fixes: ["morue"] 
             }
         };
 
@@ -144,6 +144,15 @@
                 }
             });
         };
+
+        function rafraichirLieu() {
+            if (panier.length > 0) {
+                alert("Le changement de lieu vide le ticket en cours.");
+                panier = []; mettreAJourTicket();
+            }
+            const catActive = document.querySelector('.btn-cat.active');
+            if (catActive) afficherProduits(catActive.innerText);
+        }
 
         function afficherCategories() {
             const categories = [...new Set(menuComplet.map(p => p.categorie))];
@@ -167,85 +176,95 @@
             const prodContainer = document.getElementById('produits-container');
             prodContainer.innerHTML = '';
             const prods = menuComplet.filter(p => p.categorie === categorieCible);
+            const lieu = document.getElementById('choix-lieu').value;
+
             prods.forEach(prod => {
                 let btn = document.createElement('button');
                 btn.className = 'btn-prod';
-                btn.innerHTML = `<span class="prod-nom">${prod.nom}</span><span class="prod-prix">${prod.prix} $</span>`;
-                
-                // On vérifie si c'est un Menu ou un Produit Normal
                 let isMenu = Object.keys(listeMenus).find(k => k.toLowerCase() === prod.nom.toLowerCase());
                 
-                if(isMenu) {
+                // LOGIQUE CORRIGÉE : Si c'est un menu, pas de pastille de stock.
+                let htmlStock = "";
+                if (isMenu) {
+                    htmlStock = `<span class="prod-stock" style="color:#aaa;">Composer...</span>`;
                     btn.onclick = function() { ouvrirModalMenu(isMenu, prod.prix); };
                 } else {
+                    let stockDispo = (lieu === "Food Truck") ? prod.stock_food_truck : prod.stock_cuisine;
+                    if (stockDispo > 0) {
+                        htmlStock = `<span class="prod-stock" style="color:#00ff00;">Stock : ${stockDispo}</span>`;
+                    } else {
+                        htmlStock = `<span class="prod-stock" style="color:#ff4444;">RUPTURE</span>`;
+                    }
                     btn.onclick = function() { ajouterProduitFinal(prod.nom, prod.prix, [prod.nom]); };
                 }
-                
+
+                btn.innerHTML = `<span class="prod-nom">${prod.nom}</span><span class="prod-prix">${prod.prix} $</span>${htmlStock}`;
                 prodContainer.appendChild(btn);
             });
         }
 
-        // --- GESTION DU POP-UP DES MENUS ---
         function ouvrirModalMenu(nomMenu, prix) {
             menuEnCours = { nom: nomMenu, prix: prix, config: listeMenus[nomMenu] };
-            document.getElementById("modal-titre").innerText = "Composition : " + nomMenu;
-            
+            document.getElementById("modal-titre").innerText = nomMenu.toUpperCase();
             let htmlChoix = "";
             menuEnCours.config.etapes.forEach((etape, index) => {
-                htmlChoix += `<label>${etape.titre}</label>`;
-                htmlChoix += `<select id="choix-menu-${index}">`;
-                
-                let optionsPossibles = etape.options;
-                
-                // Si le plat est libre, on fouille le menu complet pour trouver les plats
-                if (optionsPossibles === "TOUS_LES_PLATS") {
-                    optionsPossibles = menuComplet.filter(p => p.categorie.toLowerCase().includes("plat")).map(p => p.nom);
-                    if(optionsPossibles.length === 0) optionsPossibles = ["Erreur : Aucun plat trouvé"];
-                }
-                
-                optionsPossibles.forEach(opt => {
-                    htmlChoix += `<option value="${opt}">${opt}</option>`;
-                });
+                htmlChoix += `<label>${etape.titre}</label><select id="choix-menu-${index}">`;
+                let optionsPossibles = etape.options === "TOUS_LES_PLATS" ? menuComplet.filter(p => p.categorie.toLowerCase().includes("plat")).map(p => p.nom) : etape.options;
+                optionsPossibles.forEach(opt => { htmlChoix += `<option value="${opt}">${opt}</option>`; });
                 htmlChoix += `</select>`;
             });
-            
             document.getElementById("modal-choix").innerHTML = htmlChoix;
             document.getElementById("modal-menu").style.display = "flex";
         }
 
-        function fermerModal() {
-            document.getElementById("modal-menu").style.display = "none";
-            menuEnCours = null;
-        }
+        function fermerModal() { document.getElementById("modal-menu").style.display = "none"; menuEnCours = null; }
 
         function validerMenu() {
             let listePourStock = [];
             let resumeTicket = [];
-            
-            // 1. On récupère ce que l'employé a sélectionné
             menuEnCours.config.etapes.forEach((etape, index) => {
                 let choix = document.getElementById(`choix-menu-${index}`).value;
-                listePourStock.push(choix);
-                resumeTicket.push(choix);
+                listePourStock.push(choix); resumeTicket.push(choix);
             });
+            if (menuEnCours.config.fixes) { menuEnCours.config.fixes.forEach(fixe => { listePourStock.push(fixe); }); }
             
-            // 2. On ajoute les produits obligatoires du menu (ex: frites, morue)
-            if (menuEnCours.config.fixes) {
-                menuEnCours.config.fixes.forEach(fixe => { listePourStock.push(fixe); });
-            }
-            
-            // 3. On crée le nom qui apparaîtra sur le ticket
             let nomFinalTicket = `${menuEnCours.nom} (${resumeTicket.join(" + ")})`;
-            
             ajouterProduitFinal(nomFinalTicket, menuEnCours.prix, listePourStock);
-            fermerModal();
+            fermerModal(); // On ferme le pop-up seulement si l'ajout a fonctionné
         }
 
-        // --- AJOUT AU PANIER ET VALIDATION ---
-        function ajouterProduitFinal(nom, prix, elementsADeduire) {
-            let articleExistant = panier.find(item => item.nom === nom);
+        function ajouterProduitFinal(nomTicket, prix, elementsADeduire) {
+            const lieu = document.getElementById('choix-lieu').value;
+
+            // On vérifie chaque composant (ex: l'ice tea, les frites...)
+            for (let i = 0; i < elementsADeduire.length; i++) {
+                let nomComposant = String(elementsADeduire[i]).trim().toLowerCase();
+                let prodInfo = menuComplet.find(p => String(p.nom).trim().toLowerCase() === nomComposant);
+
+                // LE RADAR : Si le produit n'existe pas dans le Google Sheets
+                if (!prodInfo) {
+                    alert(`⚠️ ERREUR DE DÉNOMINATION :\nLe produit "[ ${elementsADeduire[i]} ]" est introuvable dans le CATALOGUE.\nVérifiez l'orthographe dans votre liste de menus (caisse.html) ou dans votre Google Sheets !`);
+                    return; // Stoppe tout, rien n'est ajouté au panier.
+                }
+
+                // S'il existe, on vérifie son stock
+                let stockMax = (lieu === "Food Truck") ? prodInfo.stock_food_truck : prodInfo.stock_cuisine;
+                let qteDejaEnPanier = 0;
+                panier.forEach(item => {
+                    item.articlesADeduire.forEach(art => {
+                        if (String(art).trim().toLowerCase() === nomComposant) qteDejaEnPanier += item.quantite;
+                    });
+                });
+
+                if (qteDejaEnPanier >= stockMax) {
+                    alert(`❌ IMPOSSIBLE : Le produit [ ${prodInfo.nom.toUpperCase()} ] est en rupture de stock !`);
+                    return; // Stoppe tout
+                }
+            }
+
+            let articleExistant = panier.find(item => item.nom === nomTicket);
             if(articleExistant) { articleExistant.quantite++; } 
-            else { panier.push({ nom: nom, prix: prix, quantite: 1, articlesADeduire: elementsADeduire }); }
+            else { panier.push({ nom: nomTicket, prix: prix, quantite: 1, articlesADeduire: elementsADeduire }); }
             mettreAJourTicket();
         }
 
@@ -286,7 +305,7 @@
             fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
                 if(data.statut === "succes") {
                     alert("✅ Vente enregistrée !");
-                    panier = []; mettreAJourTicket();
+                    window.location.reload(); 
                 }
             }).catch(() => alert("❌ Erreur d'enregistrement")).finally(() => {
                 btnValider.innerText = "VALIDER LA COMMANDE";

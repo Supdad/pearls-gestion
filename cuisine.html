@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pearl's - Cuisine</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .cuisine-box { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); text-align: center; width: 350px; border-top: 4px solid #ff9900; }
+        h1 { color: #ff9900; margin-bottom: 5px; letter-spacing: 2px; font-size: 24px; }
+        p { color: #888; font-size: 14px; margin-bottom: 30px; }
+        
+        label { display: block; text-align: left; color: #aaa; margin-bottom: 5px; font-size: 14px; }
+        select, input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box; }
+        input:focus, select:focus { border-color: #ff9900; outline: none; }
+        
+        button { width: 100%; padding: 15px; background: #ff9900; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+        button:hover { background: #cc7a00; }
+        .message { margin-top: 15px; font-size: 14px; font-weight: bold; }
+        #loading { color: #ff9900; font-size: 14px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="cuisine-box">
+        <h1>TABLE DE PRÉPARATION</h1>
+        <p>Transformer les ingrédients en plats</p>
+
+        <div id="loading">Chargement des recettes...</div>
+
+        <div id="form-cuisine" style="display: none;">
+            <label>Plat cuisiné :</label>
+            <select id="choix-plat"></select>
+
+            <label>Quantité préparée :</label>
+            <input type="number" id="input-quantite" min="1" value="1">
+
+            <button id="btn-cuisiner" onclick="envoyerEnCuisine()">METTRE EN STOCK</button>
+        </div>
+        <div id="message-info" class="message"></div>
+    </div>
+
+    <script>
+        // --- TON LIEN GOOGLE ICI ---
+        const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
+
+        window.onload = function() {
+            const formData = new URLSearchParams();
+            formData.append("action", "getRecettes");
+
+            fetch(urlWebScript, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if(data.statut === "succes") {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('form-cuisine').style.display = 'block';
+                    
+                    const selectPlat = document.getElementById('choix-plat');
+                    data.plats.forEach(plat => {
+                        let option = document.createElement('option');
+                        option.value = plat;
+                        option.innerText = plat.toUpperCase();
+                        selectPlat.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => { document.getElementById('loading').innerText = "Erreur de chargement."; });
+        };
+
+        function envoyerEnCuisine() {
+            const plat = document.getElementById("choix-plat").value;
+            const quantite = document.getElementById("input-quantite").value;
+            const msgBox = document.getElementById("message-info");
+            const btn = document.getElementById("btn-cuisiner");
+
+            if (quantite <= 0) {
+                msgBox.style.color = "#ff4444";
+                msgBox.innerText = "La quantité doit être supérieure à 0.";
+                return;
+            }
+
+            btn.innerText = "TRAITEMENT...";
+            msgBox.innerText = "";
+
+            const formData = new URLSearchParams();
+            formData.append("action", "cuisinerPlat");
+            formData.append("plat", plat);
+            formData.append("quantite", quantite);
+
+            fetch(urlWebScript, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerText = "METTRE EN STOCK";
+                if (data.statut === "succes") {
+                    msgBox.style.color = "#00ff00"; 
+                    msgBox.innerText = `✅ ${quantite}x ${plat.toUpperCase()} ajoutés au stock !`;
+                    document.getElementById("input-quantite").value = 1; // Remet à 1
+                }
+            })
+            .catch(error => {
+                btn.innerText = "METTRE EN STOCK";
+                msgBox.style.color = "#ff4444"; 
+                msgBox.innerText = "❌ Erreur de communication.";
+            });
+        }
+    </script>
+</body>
+</html>
