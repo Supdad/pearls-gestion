@@ -3,28 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pearl's - Cuisine</title>
+    <title>Pearl's - Hub Logistique</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
         
-        /* BARRE DE NAVIGATION EN HAUT */
+        /* BARRE DE NAVIGATION */
         .top-bar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-bottom: 2px solid #ff9900; }
         .top-bar-title { font-size: 20px; font-weight: bold; color: #ff9900; letter-spacing: 2px; }
         .top-bar-user { margin-left: 20px; color: #aaa; font-size: 16px; }
         .btn-nav { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; transition: 0.2s; font-size: 14px; }
         .btn-nav:hover { opacity: 0.8; }
 
-        .cuisine-box { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); text-align: center; width: 350px; border-top: 4px solid #ff9900; margin-top: 60px; }
-        h1 { color: #ff9900; margin-bottom: 5px; letter-spacing: 2px; font-size: 24px; }
-        p { color: #888; font-size: 14px; margin-bottom: 30px; }
+        .hub-box { background: #1e1e1e; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); width: 450px; border-top: 4px solid #ff9900; margin-top: 60px; }
+        
+        /* ONGLETS */
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; justify-content: center; }
+        .tab-btn { flex: 1; background: #333; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 12px; }
+        .tab-btn.active { background: #ff9900; color: #111; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        h2 { color: #ff9900; margin-top: 0; margin-bottom: 5px; letter-spacing: 1px; font-size: 20px; text-align: center; }
+        p.desc { color: #888; font-size: 13px; margin-bottom: 25px; text-align: center; }
         
         label { display: block; text-align: left; color: #aaa; margin-bottom: 5px; font-size: 14px; }
         select, input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box; }
         input:focus, select:focus { border-color: #ff9900; outline: none; }
         
-        button.btn-cuisiner { width: 100%; padding: 15px; background: #ff9900; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
-        button.btn-cuisiner:hover { background: #cc7a00; }
-        #loading { color: #ff9900; font-size: 14px; margin-bottom: 20px; }
+        .flex-row { display: flex; gap: 15px; }
+        .flex-row > div { flex: 1; }
+
+        button.btn-action { width: 100%; padding: 15px; background: #ff9900; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+        button.btn-action:hover { background: #cc7a00; }
+        
+        #loading { color: #ff9900; font-size: 16px; text-align: center; }
 
         #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.4s ease-in-out, bottom 0.4s ease-in-out; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
@@ -37,98 +50,208 @@
 
     <div class="top-bar">
         <div>
-            <span class="top-bar-title">PEARL'S CUISINE</span>
+            <span class="top-bar-title">HUB LOGISTIQUE</span>
             <span class="top-bar-user" id="affichage-employe">👤 Employé : ...</span>
         </div>
         <div>
-            <button class="btn-nav" style="background:#00cccc; color:#111;" onclick="allerEnCaisse()">🛒 ALLER EN CAISSE</button>
+            <button class="btn-nav" style="background:#00cccc; color:#111;" onclick="allerEnCaisse()">🛒 CAISSE</button>
+            <button class="btn-nav" style="background:#9933ff; color:#fff;" onclick="window.location.href='livraison.html?nom=' + encodeURIComponent(nomEmploye)">🚚 LIVRAISONS</button>
             <button class="btn-nav" style="background:#ff4444; color:#fff;" onclick="deconnexion()">🚪 DÉCONNEXION</button>
         </div>
     </div>
 
-    <div class="cuisine-box">
-        <h1>PRÉPARATION</h1>
-        <p>Transformer les ingrédients en plats</p>
+    <div id="loading" style="margin-top: 100px;">Chargement des stocks du Pearl's...</div>
 
-        <div id="loading">Chargement des recettes...</div>
-
-        <div id="form-cuisine" style="display: none;">
-            <label>Plat cuisiné :</label>
-            <select id="choix-plat"></select>
-
-            <label>Quantité préparée :</label>
-            <input type="number" id="input-quantite" min="1" value="1">
-
-            <button class="btn-cuisiner" id="btn-cuisiner" onclick="envoyerEnCuisine()">METTRE EN STOCK</button>
+    <div class="hub-box" id="hub-container" style="display: none;">
+        
+        <!-- LES ONGLETS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-prep', this)">PRÉPARATION</button>
+            <button class="tab-btn" onclick="switchTab('tab-trans', this)">TRANSFERTS</button>
+            <button class="tab-btn" onclick="switchTab('tab-rec', this)">COURSES</button>
         </div>
+
+        <!-- ONGLET 1 : PREPARATION -->
+        <div id="tab-prep" class="tab-content active">
+            <h2>CUISINE</h2>
+            <p class="desc">Transformer les ingrédients en plats finis</p>
+            <label>Plat à cuisiner :</label>
+            <select id="prep-plat"></select>
+            <label>Quantité :</label>
+            <input type="number" id="prep-qte" min="1" value="1">
+            <button class="btn-action" id="btn-prep" onclick="cuisiner()">METTRE EN STOCK (CUISINE)</button>
+        </div>
+
+        <!-- ONGLET 2 : TRANSFERTS -->
+        <div id="tab-trans" class="tab-content">
+            <h2>MOUVEMENT DE STOCK</h2>
+            <p class="desc">Déplacer des produits finis entre les stocks</p>
+            <label>Produit à déplacer :</label>
+            <select id="trans-produit"></select>
+            
+            <div class="flex-row">
+                <div>
+                    <label>Depuis (Source) :</label>
+                    <select id="trans-source">
+                        <option value="cuisine">Stock Cuisine</option>
+                        <option value="camion">Stock Camion</option>
+                        <option value="foodtruck">Stock Food Truck</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Vers (Dest.) :</label>
+                    <select id="trans-dest">
+                        <option value="camion">Stock Camion</option>
+                        <option value="cuisine">Stock Cuisine</option>
+                        <option value="foodtruck">Stock Food Truck</option>
+                    </select>
+                </div>
+            </div>
+            
+            <label>Quantité :</label>
+            <input type="number" id="trans-qte" min="1" value="1">
+            <button class="btn-action" id="btn-trans" onclick="transferer()">EFFECTUER LE TRANSFERT</button>
+        </div>
+
+        <!-- ONGLET 3 : COURSES -->
+        <div id="tab-rec" class="tab-content">
+            <h2>RÉCEPTION</h2>
+            <p class="desc">Entrer les achats (Ingrédients ou Produits) dans l'appli</p>
+            
+            <label>Type d'achat :</label>
+            <select id="rec-type" onchange="updateCourseUI()">
+                <option value="ingredient">🍅 Ingrédient brut (Va au Frigo)</option>
+                <option value="catalogue">🥤 Produit Fini / Boisson (Catalogue)</option>
+            </select>
+            
+            <label>Produit acheté :</label>
+            <select id="rec-produit"></select>
+            
+            <div id="rec-dest-container" style="display: none;">
+                <label>Ranger la marchandise dans :</label>
+                <select id="rec-dest">
+                    <option value="cuisine">Stock Cuisine</option>
+                    <option value="camion">Stock Camion</option>
+                    <option value="foodtruck">Stock Food Truck</option>
+                </select>
+            </div>
+            
+            <label>Quantité reçue :</label>
+            <input type="number" id="rec-qte" min="1" value="1">
+            <button class="btn-action" id="btn-rec" onclick="ajouterCourse()">ENREGISTRER LA COURSE</button>
+        </div>
+
     </div>
 
     <div id="toast">Message</div>
 
     <script>
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
-        
-        const parametresUrl = new URLSearchParams(window.location.search);
-        let nomEmploye = parametresUrl.get("nom") || "Inconnu";
+        let nomEmploye = new URLSearchParams(window.location.search).get("nom") || "Inconnu";
         document.getElementById('affichage-employe').innerText = "👤 Employé : " + nomEmploye;
+
+        let dbCatalogue = [], dbIngredients = [];
 
         function afficherMessage(msg, type = "success") {
             const toast = document.getElementById("toast"); toast.innerText = msg; toast.className = "show " + type;
-            setTimeout(function() { toast.className = toast.className.replace("show", ""); }, 3000);
+            setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
         }
 
-        // --- NAVIGATION ---
-        function allerEnCaisse() {
-            window.location.href = "caisse.html?nom=" + encodeURIComponent(nomEmploye);
-        }
-
+        function allerEnCaisse() { window.location.href = "caisse.html?nom=" + encodeURIComponent(nomEmploye); }
         function deconnexion() {
-            afficherMessage("Déconnexion en cours...", "warning");
-            const fd = new URLSearchParams();
-            fd.append("action", "logout");
-            fd.append("nom", nomEmploye);
+            afficherMessage("Déconnexion...", "warning");
+            fetch(urlWebScript, { method: 'POST', body: new URLSearchParams({action: "logout", nom: nomEmploye}) }).finally(() => window.location.href = "index.html");
+        }
+
+        // --- GESTION DES ONGLETS ---
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // --- CHARGEMENT DES DONNÉES ---
+        window.onload = function() {
+            fetch(urlWebScript, { method: 'POST', body: new URLSearchParams({action: "getDataCuisine"}) })
+            .then(r => r.json()).then(data => {
+                if(data.statut === "succes") {
+                    dbCatalogue = data.catalogue; dbIngredients = data.ingredients;
+                    
+                    // Remplir Onglet Préparation
+                    const selPrep = document.getElementById('prep-plat');
+                    data.plats.forEach(p => selPrep.innerHTML += `<option value="${p}">${p.toUpperCase()}</option>`);
+                    
+                    // Remplir Onglet Transfert
+                    const selTrans = document.getElementById('trans-produit');
+                    dbCatalogue.forEach(p => selTrans.innerHTML += `<option value="${p.nom}">${p.nom.toUpperCase()} (Cuis:${p.s_cuis} | Cam:${p.s_cam} | FT:${p.s_ft})</option>`);
+                    
+                    updateCourseUI(); // Remplir Onglet Courses par défaut
+
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('hub-container').style.display = 'block';
+                }
+            });
+        };
+
+        // --- GESTION ONGLET COURSES ---
+        function updateCourseUI() {
+            const type = document.getElementById('rec-type').value;
+            const selProd = document.getElementById('rec-produit');
+            selProd.innerHTML = "";
             
-            fetch(urlWebScript, { method: 'POST', body: fd }).then(() => {
-                window.location.href = "index.html"; 
+            if (type === "ingredient") {
+                document.getElementById('rec-dest-container').style.display = 'none';
+                dbIngredients.forEach(i => selProd.innerHTML += `<option value="${i.nom}">${i.nom.toUpperCase()}</option>`);
+            } else {
+                document.getElementById('rec-dest-container').style.display = 'block';
+                dbCatalogue.forEach(c => selProd.innerHTML += `<option value="${c.nom}">${c.nom.toUpperCase()}</option>`);
+            }
+        }
+
+        // --- ENVOI DE DONNÉES ---
+        function requeteServeur(action, formData, btnId, texteOriginal) {
+            const btn = document.getElementById(btnId);
+            btn.innerText = "EN COURS..."; btn.disabled = true;
+            formData.append("action", action);
+            
+            fetch(urlWebScript, { method: 'POST', body: formData }).then(r => r.json()).then(data => {
+                if(data.statut === "succes") {
+                    afficherMessage("✅ Opération réussie !", "success");
+                    setTimeout(() => window.location.reload(), 1500); // Recharge pour actualiser les stocks affichés
+                } else {
+                    afficherMessage("❌ " + (data.message || "Erreur"), "error");
+                    btn.innerText = texteOriginal; btn.disabled = false;
+                }
             }).catch(() => {
-                window.location.href = "index.html"; 
+                afficherMessage("❌ Erreur serveur.", "error");
+                btn.innerText = texteOriginal; btn.disabled = false;
             });
         }
 
-        window.onload = function() {
-            const formData = new URLSearchParams(); formData.append("action", "getRecettes");
-            fetch(urlWebScript, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if(data.statut === "succes") {
-                    document.getElementById('loading').style.display = 'none'; document.getElementById('form-cuisine').style.display = 'block';
-                    const selectPlat = document.getElementById('choix-plat');
-                    data.plats.forEach(plat => { let option = document.createElement('option'); option.value = plat; option.innerText = plat.toUpperCase(); selectPlat.appendChild(option); });
-                }
-            })
-            .catch(error => { document.getElementById('loading').innerText = "Erreur de chargement."; });
-        };
+        function cuisiner() {
+            const fd = new URLSearchParams({ plat: document.getElementById("prep-plat").value, quantite: document.getElementById("prep-qte").value });
+            requeteServeur("cuisinerPlat", fd, "btn-prep", "METTRE EN STOCK (CUISINE)");
+        }
 
-        function envoyerEnCuisine() {
-            const plat = document.getElementById("choix-plat").value;
-            const quantite = document.getElementById("input-quantite").value;
-            const btn = document.getElementById("btn-cuisiner");
+        function transferer() {
+            const fd = new URLSearchParams({
+                produit: document.getElementById("trans-produit").value,
+                quantite: document.getElementById("trans-qte").value,
+                source: document.getElementById("trans-source").value,
+                dest: document.getElementById("trans-dest").value
+            });
+            requeteServeur("transfererStock", fd, "btn-trans", "EFFECTUER LE TRANSFERT");
+        }
 
-            if (quantite <= 0) { return afficherMessage("La quantité doit être supérieure à 0.", "error"); }
-
-            btn.innerText = "TRAITEMENT...";
-            const formData = new URLSearchParams(); formData.append("action", "cuisinerPlat"); formData.append("plat", plat); formData.append("quantite", quantite);
-
-            fetch(urlWebScript, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                btn.innerText = "METTRE EN STOCK";
-                if (data.statut === "succes") {
-                    afficherMessage(`✅ ${quantite}x ${plat.toUpperCase()} ajoutés au stock !`, "success");
-                    document.getElementById("input-quantite").value = 1; 
-                }
-            })
-            .catch(error => { btn.innerText = "METTRE EN STOCK"; afficherMessage("❌ Erreur de communication.", "error"); });
+        function ajouterCourse() {
+            const type = document.getElementById("rec-type").value;
+            const fd = new URLSearchParams({
+                produit: document.getElementById("rec-produit").value,
+                quantite: document.getElementById("rec-qte").value,
+                dest: (type === "ingredient") ? "ingredient" : document.getElementById("rec-dest").value
+            });
+            requeteServeur("ajouterCourse", fd, "btn-rec", "ENREGISTRER LA COURSE");
         }
     </script>
 </body>

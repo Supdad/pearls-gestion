@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pearl's - Livraisons</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; height: 95vh; box-sizing: border-box; }
+        
+        /* BARRE DE NAVIGATION */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-radius: 10px; border-bottom: 2px solid #9933ff; }
+        .top-bar-title { font-size: 20px; font-weight: bold; color: #9933ff; letter-spacing: 2px; }
+        .top-bar-user { margin-left: 20px; color: #aaa; font-size: 16px; font-weight: normal; }
+        .btn-nav { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; transition: 0.2s; font-size: 14px; }
+        .btn-nav:hover { opacity: 0.8; }
+        
+        .main-content { display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto; padding-right: 10px; }
+        
+        .header-livraison { background: #1e1e1e; padding: 20px; border-radius: 10px; text-align: center; }
+        .header-livraison h1 { color: #9933ff; margin: 0 0 10px 0; }
+        .jour-actuel { font-size: 18px; color: #ccc; }
+
+        /* CARTES DE LIVRAISON */
+        .card-livraison { background: #1e1e1e; border-radius: 10px; padding: 20px; border-left: 5px solid #444; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-info { flex: 1; }
+        .ent-nom { font-size: 22px; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
+        .ent-jour { font-size: 14px; color: #aaa; margin-bottom: 15px; }
+        .commande-details { background: #2a2a2a; padding: 10px; border-radius: 5px; font-family: monospace; color: #00cccc; margin-bottom: 15px; }
+        
+        .box-manquant { background: rgba(255, 68, 68, 0.1); border: 1px solid #ff4444; padding: 10px; border-radius: 5px; font-size: 14px; color: #ffbbbb; margin-bottom: 15px; }
+        .box-manquant ul { margin: 5px 0 0 0; padding-left: 20px; }
+        
+        .card-actions { text-align: right; min-width: 200px; }
+        .badge-etat { display: inline-block; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
+        .etat-afaire { background: #ff4444; color: white; }
+        .etat-encours { background: #ff9900; color: #111; }
+        .etat-prete { background: #00ff00; color: #111; }
+        .etat-livree { background: #555; color: #ccc; }
+
+        .btn-valider-liv { width: 100%; padding: 15px; background: #9933ff; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.2s; }
+        .btn-valider-liv:hover { background: #7a29cc; }
+        .btn-valider-liv:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+        #loading { text-align: center; color: #9933ff; font-size: 18px; margin-top: 50px; }
+
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.4s ease-in-out, bottom 0.4s ease-in-out; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        #toast.success { border-bottom: 4px solid #00ff00; }
+        #toast.error { border-bottom: 4px solid #ff4444; }
+        #toast.warning { border-bottom: 4px solid #ffcc00; color: #ffcc00; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div>
+            <span class="top-bar-title">PEARL'S LOGISTIQUE</span>
+            <span class="top-bar-user" id="affichage-employe">👤 Employé : ...</span>
+        </div>
+        <div>
+            <button class="btn-nav" style="background:#00cccc; color:#111;" onclick="allerEnCaisse()">🛒 CAISSE</button>
+            <button class="btn-nav" style="background:#ff9900; color:#111;" onclick="allerEnCuisine()">🍳 CUISINE</button>
+            <button class="btn-nav" style="background:#ff4444; color:#fff;" onclick="deconnexion()">🚪 DÉCONNEXION</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-livraison">
+            <h1>GESTION DES LIVRAISONS</h1>
+            <div class="jour-actuel" id="jour-actuel">Aujourd'hui : ...</div>
+        </div>
+
+        <div id="loading">Analyse des stocks et des commandes en cours...</div>
+        <div id="livraisons-container"></div>
+    </div>
+
+    <div id="toast">Message</div>
+
+    <script>
+        const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
+        
+        const parametresUrl = new URLSearchParams(window.location.search);
+        let nomEmploye = parametresUrl.get("nom") || "Inconnu";
+        document.getElementById('affichage-employe').innerText = "👤 Employé : " + nomEmploye;
+
+        const joursSemaine = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+        let jourAujourdhui = joursSemaine[new Date().getDay()];
+        document.getElementById('jour-actuel').innerText = "Aujourd'hui : " + jourAujourdhui;
+
+        function afficherMessage(msg, type = "success") {
+            const toast = document.getElementById("toast"); toast.innerText = msg; toast.className = "show " + type;
+            setTimeout(function() { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // --- NAVIGATION ---
+        function allerEnCaisse() { window.location.href = "caisse.html?nom=" + encodeURIComponent(nomEmploye); }
+        function allerEnCuisine() { window.location.href = "cuisine.html?nom=" + encodeURIComponent(nomEmploye); }
+        function deconnexion() {
+            afficherMessage("Déconnexion...", "warning");
+            const fd = new URLSearchParams(); fd.append("action", "logout"); fd.append("nom", nomEmploye);
+            fetch(urlWebScript, { method: 'POST', body: fd }).finally(() => { window.location.href = "index.html"; });
+        }
+
+        let dbCatalogue = [], dbIngredients = [], dbRecettes = [];
+
+        window.onload = function() {
+            const fd = new URLSearchParams(); fd.append("action", "getLivraisons");
+            fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+                if(data.statut === "succes") {
+                    dbCatalogue = data.catalogue; dbIngredients = data.ingredients; dbRecettes = data.recettes;
+                    document.getElementById('loading').style.display = 'none';
+                    genererLivraisons(data.livraisons);
+                }
+            });
+        };
+
+        function genererLivraisons(livraisons) {
+            const container = document.getElementById('livraisons-container');
+            container.innerHTML = "";
+
+            if(livraisons.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#888;'>Aucune livraison programmée dans le registre.</p>";
+                return;
+            }
+
+            livraisons.forEach(liv => {
+                // 1. Vérifier si elle est déjà livrée cette semaine (moins de 6 jours)
+                let estLivreeRecemment = false;
+                if (liv.dateValid) {
+                    let dateV = new Date(liv.dateValid);
+                    let diffJours = (new Date() - dateV) / (1000 * 60 * 60 * 24);
+                    if (diffJours < 6) estLivreeRecemment = true;
+                }
+
+                let statutFinal = estLivreeRecemment ? "Livrée" : "Prête à livrer";
+                let manquesHTML = "";
+                let manquants = [];
+
+                // 2. Si pas livrée, on analyse les stocks
+                if (!estLivreeRecemment) {
+                    let items = liv.commande.split(",");
+                    
+                    items.forEach(item => {
+                        let parts = item.trim().split("x ");
+                        if (parts.length === 2) {
+                            let qteReq = parseInt(parts[0], 10);
+                            let nomProd = parts[1].trim().toLowerCase();
+
+                            // Chercher dans le catalogue
+                            let prodData = dbCatalogue.find(p => String(p[0]).trim().toLowerCase() === nomProd);
+                            let stockCamion = prodData ? (parseInt(prodData[4], 10) || 0) : 0; // Col E
+                            let stockCuisine = prodData ? (parseInt(prodData[3], 10) || 0) : 0; // Col D
+
+                            if (stockCamion < qteReq) {
+                                if ((stockCamion + stockCuisine) >= qteReq) {
+                                    if(statutFinal !== "À faire") statutFinal = "En cours de préparation";
+                                    manquants.push(`➡️ Transférer ${qteReq - stockCamion}x ${nomProd.toUpperCase()} de la cuisine au camion.`);
+                                } else {
+                                    statutFinal = "À faire";
+                                    let platManquant = qteReq - (stockCamion + stockCuisine);
+                                    manquants.push(`❌ Il manque ${platManquant}x ${nomProd.toUpperCase()} cuisinés.`);
+
+                                    // Analyser les ingrédients nécessaires pour ce plat manquant
+                                    let recette = dbRecettes.find(r => String(r[0]).trim().toLowerCase() === nomProd);
+                                    if (recette) {
+                                        for (let i = 1; i < recette.length; i += 2) {
+                                            let ingNom = String(recette[i]).trim().toLowerCase();
+                                            if (!ingNom || ingNom === "undefined") continue;
+                                            let qtePourUn = parseFloat(recette[i+1]) || 1;
+                                            let totalIngRequis = platManquant * qtePourUn;
+
+                                            let ingData = dbIngredients.find(ing => String(ing[0]).trim().toLowerCase() === ingNom);
+                                            let stockIng = ingData ? (parseFloat(ingData[2]) || 0) : 0;
+
+                                            if (stockIng < totalIngRequis) {
+                                                manquants.push(`⚠️ ALERTE INGRÉDIENT : Il manque ${totalIngRequis - stockIng}x ${ingNom.toUpperCase()} dans le frigo.`);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Génération de l'HTML des éléments manquants
+                if (manquants.length > 0) {
+                    manquesHTML = `<div class="box-manquant"><strong>Action requise :</strong><ul>`;
+                    manquants.forEach(m => manquesHTML += `<li>${m}</li>`);
+                    manquesHTML += `</ul></div>`;
+                }
+
+                // Couleurs et badges
+                let classBadge = "etat-afaire";
+                if (statutFinal === "En cours de préparation") classBadge = "etat-encours";
+                if (statutFinal === "Prête à livrer") classBadge = "etat-prete";
+                if (statutFinal === "Livrée") classBadge = "etat-livree";
+
+                let btnDisabled = (statutFinal !== "Prête à livrer") ? "disabled" : "";
+                let txtBouton = (statutFinal === "Livrée") ? "DÉJÀ LIVRÉE" : "VALIDER LA LIVRAISON";
+
+                // Afficher une petite alerte si c'est le jour J et que ce n'est pas prêt
+                let alerteJourHTML = "";
+                if (liv.jour.toLowerCase() === jourAujourdhui.toLowerCase() && statutFinal !== "Livrée") {
+                    alerteJourHTML = `<span style="color:#ffcc00; font-weight:bold;">⚠️ LIVRAISON AUJOURD'HUI !</span><br>`;
+                }
+
+                // Création de la carte
+                let card = document.createElement('div');
+                card.className = "card-livraison";
+                card.innerHTML = `
+                    <div class="card-info">
+                        <div class="ent-nom">${liv.entreprise}</div>
+                        <div class="ent-jour">${alerteJourHTML} Récurence : Tous les ${liv.jour}</div>
+                        <div class="commande-details">${liv.commande}</div>
+                        ${manquesHTML}
+                    </div>
+                    <div class="card-actions">
+                        <div class="badge-etat ${classBadge}">${statutFinal}</div>
+                        <div style="font-size:20px; color:#00cccc; font-weight:bold; margin-bottom:15px;">${liv.prix}$</div>
+                        <button class="btn-valider-liv" ${btnDisabled} onclick="validerLivraison(${liv.idLigne}, '${liv.commande}', ${liv.prix})">${txtBouton}</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function validerLivraison(idLigne, commandeStr, prix) {
+            const btn = event.target;
+            btn.innerText = "ENVOI...";
+            btn.disabled = true;
+
+            const fd = new URLSearchParams();
+            fd.append("action", "validerLivraison");
+            fd.append("idLigne", idLigne);
+            fd.append("commande", commandeStr);
+            fd.append("prix", prix);
+            fd.append("nom", nomEmploye);
+
+            fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+                if(data.statut === "succes") {
+                    afficherMessage("✅ Livraison validée et facturée !", "success");
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            }).catch(() => {
+                afficherMessage("❌ Erreur de réseau.", "error");
+                btn.innerText = "VALIDER LA LIVRAISON";
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
