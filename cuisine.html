@@ -5,8 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pearl's - Cuisine</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .cuisine-box { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); text-align: center; width: 350px; border-top: 4px solid #ff9900; }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
+        
+        /* BARRE DE NAVIGATION EN HAUT */
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-bottom: 2px solid #ff9900; }
+        .top-bar-title { font-size: 20px; font-weight: bold; color: #ff9900; letter-spacing: 2px; }
+        .top-bar-user { margin-left: 20px; color: #aaa; font-size: 16px; }
+        .btn-nav { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; transition: 0.2s; font-size: 14px; }
+        .btn-nav:hover { opacity: 0.8; }
+
+        .cuisine-box { background: #1e1e1e; padding: 40px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); text-align: center; width: 350px; border-top: 4px solid #ff9900; margin-top: 60px; }
         h1 { color: #ff9900; margin-bottom: 5px; letter-spacing: 2px; font-size: 24px; }
         p { color: #888; font-size: 14px; margin-bottom: 30px; }
         
@@ -14,16 +22,32 @@
         select, input { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; font-size: 16px; box-sizing: border-box; }
         input:focus, select:focus { border-color: #ff9900; outline: none; }
         
-        button { width: 100%; padding: 15px; background: #ff9900; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
-        button:hover { background: #cc7a00; }
-        .message { margin-top: 15px; font-size: 14px; font-weight: bold; }
+        button.btn-cuisiner { width: 100%; padding: 15px; background: #ff9900; color: #111; border: none; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+        button.btn-cuisiner:hover { background: #cc7a00; }
         #loading { color: #ff9900; font-size: 14px; margin-bottom: 20px; }
+
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.4s ease-in-out, bottom 0.4s ease-in-out; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        #toast.success { border-bottom: 4px solid #00ff00; }
+        #toast.error { border-bottom: 4px solid #ff4444; }
+        #toast.warning { border-bottom: 4px solid #ffcc00; color: #ffcc00; }
     </style>
 </head>
 <body>
 
+    <div class="top-bar">
+        <div>
+            <span class="top-bar-title">PEARL'S CUISINE</span>
+            <span class="top-bar-user" id="affichage-employe">👤 Employé : ...</span>
+        </div>
+        <div>
+            <button class="btn-nav" style="background:#00cccc; color:#111;" onclick="allerEnCaisse()">🛒 ALLER EN CAISSE</button>
+            <button class="btn-nav" style="background:#ff4444; color:#fff;" onclick="deconnexion()">🚪 DÉCONNEXION</button>
+        </div>
+    </div>
+
     <div class="cuisine-box">
-        <h1>TABLE DE PRÉPARATION</h1>
+        <h1>PRÉPARATION</h1>
         <p>Transformer les ingrédients en plats</p>
 
         <div id="loading">Chargement des recettes...</div>
@@ -35,33 +59,51 @@
             <label>Quantité préparée :</label>
             <input type="number" id="input-quantite" min="1" value="1">
 
-            <button id="btn-cuisiner" onclick="envoyerEnCuisine()">METTRE EN STOCK</button>
+            <button class="btn-cuisiner" id="btn-cuisiner" onclick="envoyerEnCuisine()">METTRE EN STOCK</button>
         </div>
-        <div id="message-info" class="message"></div>
     </div>
 
+    <div id="toast">Message</div>
+
     <script>
-        // --- TON LIEN GOOGLE ICI ---
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
+        
+        const parametresUrl = new URLSearchParams(window.location.search);
+        let nomEmploye = parametresUrl.get("nom") || "Inconnu";
+        document.getElementById('affichage-employe').innerText = "👤 Employé : " + nomEmploye;
+
+        function afficherMessage(msg, type = "success") {
+            const toast = document.getElementById("toast"); toast.innerText = msg; toast.className = "show " + type;
+            setTimeout(function() { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // --- NAVIGATION ---
+        function allerEnCaisse() {
+            window.location.href = "caisse.html?nom=" + encodeURIComponent(nomEmploye);
+        }
+
+        function deconnexion() {
+            afficherMessage("Déconnexion en cours...", "warning");
+            const fd = new URLSearchParams();
+            fd.append("action", "logout");
+            fd.append("nom", nomEmploye);
+            
+            fetch(urlWebScript, { method: 'POST', body: fd }).then(() => {
+                window.location.href = "index.html"; 
+            }).catch(() => {
+                window.location.href = "index.html"; 
+            });
+        }
 
         window.onload = function() {
-            const formData = new URLSearchParams();
-            formData.append("action", "getRecettes");
-
+            const formData = new URLSearchParams(); formData.append("action", "getRecettes");
             fetch(urlWebScript, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 if(data.statut === "succes") {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('form-cuisine').style.display = 'block';
-                    
+                    document.getElementById('loading').style.display = 'none'; document.getElementById('form-cuisine').style.display = 'block';
                     const selectPlat = document.getElementById('choix-plat');
-                    data.plats.forEach(plat => {
-                        let option = document.createElement('option');
-                        option.value = plat;
-                        option.innerText = plat.toUpperCase();
-                        selectPlat.appendChild(option);
-                    });
+                    data.plats.forEach(plat => { let option = document.createElement('option'); option.value = plat; option.innerText = plat.toUpperCase(); selectPlat.appendChild(option); });
                 }
             })
             .catch(error => { document.getElementById('loading').innerText = "Erreur de chargement."; });
@@ -70,38 +112,23 @@
         function envoyerEnCuisine() {
             const plat = document.getElementById("choix-plat").value;
             const quantite = document.getElementById("input-quantite").value;
-            const msgBox = document.getElementById("message-info");
             const btn = document.getElementById("btn-cuisiner");
 
-            if (quantite <= 0) {
-                msgBox.style.color = "#ff4444";
-                msgBox.innerText = "La quantité doit être supérieure à 0.";
-                return;
-            }
+            if (quantite <= 0) { return afficherMessage("La quantité doit être supérieure à 0.", "error"); }
 
             btn.innerText = "TRAITEMENT...";
-            msgBox.innerText = "";
-
-            const formData = new URLSearchParams();
-            formData.append("action", "cuisinerPlat");
-            formData.append("plat", plat);
-            formData.append("quantite", quantite);
+            const formData = new URLSearchParams(); formData.append("action", "cuisinerPlat"); formData.append("plat", plat); formData.append("quantite", quantite);
 
             fetch(urlWebScript, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 btn.innerText = "METTRE EN STOCK";
                 if (data.statut === "succes") {
-                    msgBox.style.color = "#00ff00"; 
-                    msgBox.innerText = `✅ ${quantite}x ${plat.toUpperCase()} ajoutés au stock !`;
-                    document.getElementById("input-quantite").value = 1; // Remet à 1
+                    afficherMessage(`✅ ${quantite}x ${plat.toUpperCase()} ajoutés au stock !`, "success");
+                    document.getElementById("input-quantite").value = 1; 
                 }
             })
-            .catch(error => {
-                btn.innerText = "METTRE EN STOCK";
-                msgBox.style.color = "#ff4444"; 
-                msgBox.innerText = "❌ Erreur de communication.";
-            });
+            .catch(error => { btn.innerText = "METTRE EN STOCK"; afficherMessage("❌ Erreur de communication.", "error"); });
         }
     </script>
 </body>
