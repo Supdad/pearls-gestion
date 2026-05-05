@@ -96,6 +96,8 @@
                         <option value="cuisine">Stock Cuisine</option>
                         <option value="camion">Stock Camion</option>
                         <option value="foodtruck">Stock Food Truck</option>
+                        <option value="bureau">Stock Bureau</option>
+                        <option value="event">Stock Event (Salle haut)</option>
                     </select>
                 </div>
                 <div>
@@ -104,6 +106,8 @@
                         <option value="camion">Stock Camion</option>
                         <option value="cuisine">Stock Cuisine</option>
                         <option value="foodtruck">Stock Food Truck</option>
+                        <option value="bureau">Stock Bureau</option>
+                        <option value="event">Stock Event (Salle haut)</option>
                     </select>
                 </div>
             </div>
@@ -133,6 +137,8 @@
                     <option value="cuisine">Stock Cuisine</option>
                     <option value="camion">Stock Camion</option>
                     <option value="foodtruck">Stock Food Truck</option>
+                    <option value="bureau">Stock Bureau</option>
+                    <option value="event">Stock Event (Salle haut)</option>
                 </select>
             </div>
             
@@ -163,7 +169,6 @@
             fetch(urlWebScript, { method: 'POST', body: new URLSearchParams({action: "logout", nom: nomEmploye}) }).finally(() => window.location.href = "index.html");
         }
 
-        // --- GESTION DES ONGLETS ---
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -171,22 +176,19 @@
             btn.classList.add('active');
         }
 
-        // --- CHARGEMENT DES DONNÉES ---
         window.onload = function() {
             fetch(urlWebScript, { method: 'POST', body: new URLSearchParams({action: "getDataCuisine"}) })
             .then(r => r.json()).then(data => {
                 if(data.statut === "succes") {
                     dbCatalogue = data.catalogue; dbIngredients = data.ingredients;
                     
-                    // Remplir Onglet Préparation
                     const selPrep = document.getElementById('prep-plat');
                     data.plats.forEach(p => selPrep.innerHTML += `<option value="${p}">${p.toUpperCase()}</option>`);
                     
-                    // Remplir Onglet Transfert
                     const selTrans = document.getElementById('trans-produit');
-                    dbCatalogue.forEach(p => selTrans.innerHTML += `<option value="${p.nom}">${p.nom.toUpperCase()} (Cuis:${p.s_cuis} | Cam:${p.s_cam} | FT:${p.s_ft})</option>`);
+                    dbCatalogue.forEach(p => selTrans.innerHTML += `<option value="${p.nom}">${p.nom.toUpperCase()} (Cuis:${p.s_cuis} | Cam:${p.s_cam} | FT:${p.s_ft} | Bur:${p.s_bur} | Ev:${p.s_ev})</option>`);
                     
-                    updateCourseUI(); // Remplir Onglet Courses par défaut
+                    updateCourseUI(); 
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('hub-container').style.display = 'block';
@@ -194,7 +196,6 @@
             });
         };
 
-        // --- GESTION ONGLET COURSES ---
         function updateCourseUI() {
             const type = document.getElementById('rec-type').value;
             const selProd = document.getElementById('rec-produit');
@@ -209,7 +210,6 @@
             }
         }
 
-        // --- ENVOI DE DONNÉES ---
         function requeteServeur(action, formData, btnId, texteOriginal) {
             const btn = document.getElementById(btnId);
             btn.innerText = "EN COURS..."; btn.disabled = true;
@@ -218,7 +218,7 @@
             fetch(urlWebScript, { method: 'POST', body: formData }).then(r => r.json()).then(data => {
                 if(data.statut === "succes") {
                     afficherMessage("✅ Opération réussie !", "success");
-                    setTimeout(() => window.location.reload(), 1500); // Recharge pour actualiser les stocks affichés
+                    setTimeout(() => window.location.reload(), 1500); 
                 } else {
                     afficherMessage("❌ " + (data.message || "Erreur"), "error");
                     btn.innerText = texteOriginal; btn.disabled = false;

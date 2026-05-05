@@ -3,63 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caisse Pearl's</title>
+    <title>Pearl's - Caisse</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; height: 95vh; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         
-        /* BARRE DE NAVIGATION */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-radius: 10px; border-bottom: 2px solid #00cccc; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-bottom: 2px solid #00cccc; }
         .top-bar-title { font-size: 20px; font-weight: bold; color: #00cccc; letter-spacing: 2px; }
-        .top-bar-user { margin-left: 20px; color: #aaa; font-size: 16px; font-weight: normal; }
+        .top-bar-user { margin-left: 20px; color: #aaa; font-size: 16px; }
         .btn-nav { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; transition: 0.2s; font-size: 14px; }
         .btn-nav:hover { opacity: 0.8; }
+
+        .container { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 20px; }
         
-        .main-content { display: flex; gap: 20px; flex: 1; overflow: hidden; }
+        .left-panel { flex: 2; display: flex; flex-direction: column; background: #1e1e1e; border-radius: 10px; padding: 20px; overflow-y: auto; }
+        .categories { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .cat-btn { background: #333; color: white; border: 1px solid #444; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .cat-btn:hover, .cat-btn.active { background: #00cccc; color: #111; border-color: #00cccc; }
         
-        .menu-section { flex: 2; background: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; }
-        .categories { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 10px; }
-        .btn-cat { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; white-space: nowrap; }
-        .btn-cat.active { background: #00cccc; color: #111; }
-        .produits { display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; align-content: flex-start; }
-        .btn-prod { background: #2a2a2a; border: 1px solid #444; color: white; padding: 15px; border-radius: 8px; cursor: pointer; width: calc(33% - 10px); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
-        .btn-prod:hover { border-color: #00cccc; background: #333; }
-        .prod-nom { font-weight: bold; margin-bottom: 5px; text-align: center; }
-        .prod-prix { color: #00cccc; }
-        .prod-stock { font-size: 12px; margin-top: 5px; font-weight: bold; padding: 3px 8px; border-radius: 10px; background: rgba(0,0,0,0.5); }
+        .produits-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .produit-card { background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid #444; transition: transform 0.1s, border-color 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 100px; }
+        .produit-card:hover { border-color: #00cccc; transform: scale(1.02); }
+        .produit-nom { font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .produit-prix { color: #00cccc; font-size: 18px; font-weight: bold; }
+        .produit-stock { font-size: 12px; margin-top: 10px; color: #888; }
+        .stock-vide { color: #ff4444 !important; font-weight: bold; }
+
+        .right-panel { flex: 1; background: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; }
         
-        .ticket-section { flex: 1; background: #1e1e1e; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; border-left: 4px solid #00cccc; }
-        .ticket-header { text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
-        .ticket-liste { flex: 1; overflow-y: auto; }
-        .ticket-item { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 10px; margin-bottom: 5px; border-radius: 5px; }
-        .btn-remove { background: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 5px 10px; font-weight: bold; }
-        .options-vente { background: #2a2a2a; padding: 15px; border-radius: 5px; margin-top: 10px; }
-        .options-vente select { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; background: #444; color: white; border: none; border-radius: 5px; font-size: 14px; }
-        .ticket-total { font-size: 24px; text-align: center; padding: 15px; background: #111; border-radius: 5px; color: #00ff00; font-weight: bold; margin-top: 10px; }
-        .btn-valider { width: 100%; padding: 15px; background: #00cccc; color: #111; border: none; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; transition: 0.2s; }
-        .btn-valider:hover { background: #009999; }
+        .lieu-select { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #00cccc; background: #121212; color: white; font-size: 16px; font-weight: bold; outline: none; }
+        
+        .panier-titre { font-size: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; color: #00cccc; }
+        .panier-liste { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+        .panier-item { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .item-details { flex: 1; }
+        .item-qte { font-weight: bold; color: #00cccc; margin-right: 10px; }
+        
+        .btn-offrir { background: #ffcc00; color: #111; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-right: 5px; font-size: 14px; }
+        .btn-offrir:hover { background: #e6b800; }
+        .btn-suppr { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .btn-suppr:hover { background: #cc0000; }
+
+        .total-box { font-size: 24px; font-weight: bold; text-align: right; margin: 20px 0; color: white; border-top: 1px solid #333; padding-top: 20px; }
+        
+        .pay-buttons { display: flex; gap: 10px; }
+        .btn-pay { flex: 1; padding: 15px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; color: #111; }
+        .btn-especes { background: #00ff88; }
+        .btn-especes:hover { background: #00cc6a; }
+        .btn-carte { background: #00cccc; }
+        .btn-carte:hover { background: #009999; }
+        .btn-pay:disabled { background: #555; color: #888; cursor: not-allowed; }
+
         #loading { text-align: center; color: #00cccc; font-size: 18px; margin-top: 50px; }
-        
-        #modal-menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-box { background: #1e1e1e; padding: 25px; border-radius: 10px; border-top: 4px solid #00cccc; width: 350px; text-align: center; }
-        .modal-box label { display: block; text-align: left; margin-top: 15px; color: #aaa; font-size: 14px; }
-        .modal-box select { width: 100%; padding: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; margin-top: 5px; font-size: 16px; }
-        .btn-modal-valider { background: #00cccc; color: #111; padding: 12px; width: 100%; margin-top: 20px; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
-        .btn-modal-annuler { background: transparent; color: #888; border: 1px solid #555; padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; }
 
         #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.4s ease-in-out, bottom 0.4s ease-in-out; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
         #toast.success { border-bottom: 4px solid #00ff00; }
         #toast.error { border-bottom: 4px solid #ff4444; }
         #toast.warning { border-bottom: 4px solid #ffcc00; color: #ffcc00; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 10px; border: 2px solid #00cccc; width: 400px; box-shadow: 0 0 20px rgba(0, 204, 204, 0.3); }
+        .modal-content h2 { color: #00cccc; margin-top: 0; text-align: center; font-size: 22px; margin-bottom: 20px; }
+        .modal-content label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; }
+        .modal-content select, .modal-content input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; font-size: 14px; box-sizing: border-box; }
+        .info-menu { background: #2a2a2a; padding: 10px; border-radius: 5px; color: #00cccc; font-size: 13px; text-align: center; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- BARRE DE NAVIGATION HAUTE -->
     <div class="top-bar">
         <div>
-            <span class="top-bar-title">PEARL'S VENTE</span>
-            <span class="top-bar-user" id="affichage-employe">👤 Employé : ...</span>
+            <span class="top-bar-title">PEARL'S CAISSE</span>
+            <span class="top-bar-user" id="affichage-employe">👤 Chargement...</span>
         </div>
         <div>
             <button class="btn-nav" style="background:#ff9900; color:#111;" onclick="allerEnCuisine()">🍳 CUISINE</button>
@@ -68,38 +83,64 @@
         </div>
     </div>
 
-    <!-- CONTENU PRINCIPAL -->
-    <div class="main-content">
-        <div class="menu-section">
-            <div id="loading">Chargement du catalogue...</div>
-            <div class="categories" id="categories-container" style="display: none;"></div>
-            <div class="produits" id="produits-container" style="display: none;"></div>
+    <div class="container">
+        <div class="left-panel">
+            <div id="loading">Chargement de la carte et des stocks...</div>
+            <div class="categories" id="categories-container"></div>
+            <div class="produits-grid" id="produits-container"></div>
         </div>
 
-        <div class="ticket-section">
-            <div class="ticket-header">TICKET EN COURS</div>
-            <div class="ticket-liste" id="ticket-liste"></div>
-            <div class="options-vente">
-                <label>Paiement :</label>
-                <select id="choix-paiement"><option>Espèces</option><option>Carte Bancaire</option></select>
-                <label>Lieu (Influence les stocks) :</label>
-                <select id="choix-lieu" onchange="rafraichirLieu()">
-                    <option value="Cuisine/Resto">Restaurant</option>
-                    <option value="Food Truck">Food Truck</option>
-                    <option value="Livraison">Livraison</option>
-                </select>
+        <div class="right-panel">
+            <select id="choix-lieu" class="lieu-select" onchange="rafraichirLieu()">
+                <option value="Cuisine/Resto">Restaurant (Stock Cuisine)</option>
+                <option value="Salle Event">Salle de Réception</option>
+                <option value="Food Truck">Food Truck</option>
+                <option value="Bureau">Bureau</option>
+                <option value="Livraison">Livraison (Aucun retrait de stock)</option>
+            </select>
+
+            <h2 class="panier-titre">🛒 PANIER ACTUEL</h2>
+            <ul class="panier-liste" id="panier-liste"></ul>
+
+            <div class="total-box">Total : <span id="prix-total">0</span>$</div>
+
+            <div class="pay-buttons">
+                <button class="btn-pay btn-especes" id="btn-esp" onclick="validerPaiement('Espèces')">ESPÈCES</button>
+                <button class="btn-pay btn-carte" id="btn-cb" onclick="validerPaiement('Carte')">CARTE BANCAIRE</button>
             </div>
-            <div class="ticket-total">TOTAL : <span id="total-prix">0</span> $</div>
-            <button class="btn-valider" id="btn-valider" onclick="validerCommande()">VALIDER LA COMMANDE</button>
         </div>
     </div>
 
-    <div id="modal-menu">
-        <div class="modal-box">
-            <h3 id="modal-titre" style="color:#00cccc; margin-top:0;">Composition</h3>
-            <div id="modal-choix"></div>
-            <button class="btn-modal-valider" onclick="validerMenu()">AJOUTER</button>
-            <button class="btn-modal-annuler" onclick="fermerModal()">ANNULER</button>
+    <!-- POPUP COMPOSITION DE MENU -->
+    <div id="modal-menu" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-titre">COMPOSER MENU</h2>
+            <div id="info-menu" class="info-menu"></div>
+            
+            <div id="container-plat">
+                <label>Plat :</label>
+                <select id="choix-plat"></select>
+            </div>
+            
+            <div id="container-boisson">
+                <label>Boisson :</label>
+                <select id="choix-boisson"></select>
+            </div>
+            
+            <div id="container-dessert" style="display:none;">
+                <label>Dessert :</label>
+                <select id="choix-dessert"></select>
+            </div>
+            
+            <div id="container-qte" style="margin-top:10px; border-top:1px solid #444; padding-top:15px;">
+                <label style="color:#00cccc; font-weight:bold;">Quantité (Menus identiques) :</label>
+                <input type="number" id="choix-qte" min="1" value="1">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="fermerModal()" style="flex:1; padding:12px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">Annuler</button>
+                <button onclick="validerMenu()" style="flex:1; padding:12px; background:#00cccc; color:black; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Ajouter au panier</button>
+            </div>
         </div>
     </div>
 
@@ -108,145 +149,339 @@
     <script>
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
         
-        const parametresUrl = new URLSearchParams(window.location.search);
-        let nomEmploye = parametresUrl.get("nom") || "Inconnu";
-        document.getElementById('affichage-employe').innerText = "👤 Employé : " + nomEmploye;
+        let nomEmploye = new URLSearchParams(window.location.search).get("nom") || "Inconnu";
+        let employeGrade = "Employé"; // Sera mis à jour par le serveur
+        
+        let dbMenu = [];
+        let panier = [];
+        let categorieActuelle = "";
+        let menuEnCoursDeComposition = null;
 
-        // --- NAVIGATION ET DECONNEXION ---
-        function allerEnCuisine() {
-            window.location.href = "cuisine.html?nom=" + encodeURIComponent(nomEmploye);
-        }
-
+        function allerEnCuisine() { window.location.href = "cuisine.html?nom=" + encodeURIComponent(nomEmploye); }
         function deconnexion() {
-            afficherMessage("Déconnexion en cours...", "warning");
-            const fd = new URLSearchParams();
-            fd.append("action", "logout");
-            fd.append("nom", nomEmploye);
-            
-            fetch(urlWebScript, { method: 'POST', body: fd }).then(() => {
-                window.location.href = "index.html"; // Retour à la carte/vitrine
-            }).catch(() => {
-                window.location.href = "index.html"; // Retour même en cas d'erreur
-            });
+            afficherMessage("Déconnexion...", "warning");
+            fetch(urlWebScript, { method: 'POST', body: new URLSearchParams({action: "logout", nom: nomEmploye}) }).finally(() => window.location.href = "index.html");
         }
-
-        // LE RESTE DU CODE IDENTIQUE...
-        let menuComplet = []; let panier = []; let menuEnCours = null; 
-
-        const listeMenus = {
-            "menu soft": { etapes: [{ titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }, { titre: "Plat", options: "TOUS_LES_PLATS" }], fixes: ["frites"] },
-            "menu gourmand": { etapes: [{ titre: "Plat", options: "TOUS_LES_PLATS" }, { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }, { titre: "Dessert", options: ["cookie", "pancakes", "fondant au chocolat"] }], fixes: [] },
-            "menu alcool": { etapes: [{ titre: "Plat", options: "TOUS_LES_PLATS" }, { titre: "Alcool", options: ["vodka", "whisky", "martini blanc", "téquila", "rhum", "jägermeister"] }], fixes: [] },
-            "menu grand large": { etapes: [{ titre: "Plat", options: ["merlan frit", "écrevisse"] }, { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }], fixes: [] },
-            "menu rivage": { etapes: [{ titre: "Plat", options: ["huître", "crevettes", "bulots"] }, { titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }], fixes: [] },
-            "menu moussaillon": { etapes: [{ titre: "Boisson", options: ["ice tea", "redbull", "limonade"] }], fixes: ["morue"] }
-        };
-
         function afficherMessage(msg, type = "success") {
             const toast = document.getElementById("toast"); toast.innerText = msg; toast.className = "show " + type;
-            setTimeout(function() { toast.className = toast.className.replace("show", ""); }, 3000);
+            setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
         }
 
         window.onload = function() {
-            const fd = new URLSearchParams(); fd.append("action", "getMenu");
-            fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
+            // On envoie le nom pour récupérer le grade en même temps que le menu
+            const fd = new URLSearchParams({ action: "getMenu", nom: nomEmploye });
+            fetch(urlWebScript, { method: 'POST', body: fd })
+            .then(r => r.json()).then(data => {
                 if(data.statut === "succes") {
-                    menuComplet = data.menu; document.getElementById('loading').style.display = 'none';
-                    document.getElementById('categories-container').style.display = 'flex';
-                    document.getElementById('produits-container').style.display = 'flex';
-                    afficherCategories();
+                    dbMenu = data.menu;
+                    employeGrade = data.grade || "Employé";
+                    document.getElementById('affichage-employe').innerText = `👤 ${nomEmploye} (${employeGrade})`;
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    genererCategories();
                 }
             });
         };
 
+        function genererCategories() {
+            const container = document.getElementById('categories-container');
+            const ordreVoulu = ["menu", "plat_préparé", "soft", "dessert", "boissons chaudes", "alcool", "autre"];
+            
+            let categories = [...new Set(dbMenu.map(p => p.categorie))];
+            categories.sort((a, b) => {
+                let iA = ordreVoulu.indexOf(String(a).trim().toLowerCase()); let iB = ordreVoulu.indexOf(String(b).trim().toLowerCase());
+                if(iA === -1) iA = 999; if(iB === -1) iB = 999;
+                return iA - iB;
+            });
+
+            categories.forEach(cat => {
+                let btn = document.createElement('button');
+                btn.className = 'cat-btn';
+                btn.innerText = cat.toUpperCase().replace("_", " ");
+                btn.onclick = () => {
+                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    afficherProduits(cat);
+                };
+                container.appendChild(btn);
+            });
+
+            if(categories.length > 0) {
+                container.firstChild.classList.add('active');
+                afficherProduits(categories[0]);
+            }
+        }
+
         function rafraichirLieu() {
-            if (panier.length > 0) { afficherMessage("Le changement de lieu a vidé le ticket.", "warning"); panier = []; mettreAJourTicket(); }
-            const catActive = document.querySelector('.btn-cat.active');
-            if (catActive) afficherProduits(catActive.innerText);
+            if (categorieActuelle) afficherProduits(categorieActuelle);
+            panier = []; majPanier();
         }
 
-        function afficherCategories() {
-            const categories = [...new Set(menuComplet.map(p => p.categorie))];
-            const catContainer = document.getElementById('categories-container'); catContainer.innerHTML = '';
-            categories.forEach((cat, index) => {
-                let btn = document.createElement('button'); btn.className = index === 0 ? 'btn-cat active' : 'btn-cat'; btn.innerText = cat;
-                btn.onclick = function() { document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('active')); btn.classList.add('active'); afficherProduits(cat); };
-                catContainer.appendChild(btn);
+        function afficherProduits(categorie) {
+            categorieActuelle = categorie;
+            const container = document.getElementById('produits-container');
+            const lieu = document.getElementById('choix-lieu').value;
+            container.innerHTML = "";
+
+            let produitsFiltres = dbMenu.filter(p => p.categorie === categorie);
+            let isCategorieMenu = (categorie.toLowerCase().trim() === "menu");
+
+            produitsFiltres.forEach(prod => {
+                let stockDispo = prod.stock_cuisine;
+                if (lieu === "Food Truck") stockDispo = prod.stock_food_truck;
+                else if (lieu === "Salle Event") stockDispo = prod.stock_event;
+                else if (lieu === "Bureau") stockDispo = prod.stock_bureau;
+
+                let textStock = (lieu === "Livraison") ? "Stock non géré" : `En stock : ${stockDispo}`;
+                if (isCategorieMenu) textStock = "Composé à la commande";
+                
+                let classStock = (!isCategorieMenu && stockDispo <= 0 && lieu !== "Livraison") ? "stock-vide" : "";
+                
+                let div = document.createElement('div');
+                div.className = 'produit-card';
+                div.innerHTML = `
+                    <div class="produit-nom">${prod.nom.toUpperCase()}</div>
+                    <div class="produit-prix">${prod.prix}$</div>
+                    <div class="produit-stock ${classStock}">${textStock}</div>
+                `;
+                
+                div.onclick = () => {
+                    if (isCategorieMenu) {
+                        ouvrirPopupMenu(prod);
+                    } else if (stockDispo > 0 || lieu === "Livraison") {
+                        ajouterAuPanier(prod, null, 1); // 1 par défaut pour les produits simples
+                    } else {
+                        afficherMessage("Stock épuisé dans ce lieu !", "error");
+                    }
+                };
+                container.appendChild(div);
             });
-            if(categories.length > 0) { afficherProduits(categories[0]); }
         }
 
-        function afficherProduits(categorieCible) {
-            const prodContainer = document.getElementById('produits-container'); prodContainer.innerHTML = '';
-            const prods = menuComplet.filter(p => p.categorie === categorieCible); const lieu = document.getElementById('choix-lieu').value;
-            prods.forEach(prod => {
-                let btn = document.createElement('button'); btn.className = 'btn-prod';
-                let isMenu = Object.keys(listeMenus).find(k => k.toLowerCase() === prod.nom.toLowerCase());
-                let htmlStock = "";
-                if (isMenu) {
-                    htmlStock = `<span class="prod-stock" style="color:#aaa;">Composer...</span>`; btn.onclick = function() { ouvrirModalMenu(isMenu, prod.prix); };
-                } else {
-                    let stockDispo = (lieu === "Food Truck") ? prod.stock_food_truck : prod.stock_cuisine;
-                    if (stockDispo > 0) { htmlStock = `<span class="prod-stock" style="color:#00ff00;">Stock : ${stockDispo}</span>`; } else { htmlStock = `<span class="prod-stock" style="color:#ff4444;">RUPTURE</span>`; }
-                    btn.onclick = function() { ajouterProduitFinal(prod.nom, prod.prix, [prod.nom]); };
+        // --- GESTION INTELLIGENTE DU POPUP MENU ---
+        function ouvrirPopupMenu(prod) {
+            menuEnCoursDeComposition = prod;
+            let nomMenu = prod.nom.toLowerCase().trim();
+            document.getElementById("modal-titre").innerText = prod.nom.toUpperCase();
+            document.getElementById("choix-qte").value = 1; // Reset de la quantité
+            
+            let selPlat = document.getElementById("choix-plat");
+            let selBoisson = document.getElementById("choix-boisson");
+            let selDessert = document.getElementById("choix-dessert");
+            let infoBox = document.getElementById("info-menu");
+
+            selPlat.innerHTML = "<option value=''>-- Choisir un Plat --</option>";
+            selBoisson.innerHTML = "<option value=''>-- Choisir une Boisson --</option>";
+            selDessert.innerHTML = "<option value=''>-- Choisir un Dessert --</option>";
+
+            document.getElementById("container-plat").style.display = "block";
+            document.getElementById("container-boisson").style.display = "block";
+            document.getElementById("container-dessert").style.display = "none";
+            infoBox.style.display = "none";
+
+            let platsAutorises = [];
+            let catBoissonRequise = "soft";
+            let avecDessert = false;
+            menuEnCoursDeComposition.articlesForces = []; 
+
+            if (nomMenu.includes("soft")) {
+                menuEnCoursDeComposition.articlesForces.push("frites");
+                infoBox.innerHTML = "🍟 Une barquette de Frites sera incluse automatiquement.";
+                infoBox.style.display = "block";
+            } 
+            else if (nomMenu.includes("alcool")) {
+                menuEnCoursDeComposition.articlesForces.push("frites");
+                catBoissonRequise = "alcool";
+                infoBox.innerHTML = "🍟 Une barquette de Frites sera incluse automatiquement.";
+                infoBox.style.display = "block";
+            } 
+            else if (nomMenu.includes("gourmand")) {
+                avecDessert = true;
+                document.getElementById("container-dessert").style.display = "block";
+            } 
+            else if (nomMenu.includes("grand large")) {
+                platsAutorises = ["merlan frit", "écrevisse"];
+            } 
+            else if (nomMenu.includes("rivage")) {
+                platsAutorises = ["crevettes", "bulots", "huître", "huitre"];
+            } 
+            else if (nomMenu.includes("moussaillon")) {
+                platsAutorises = ["morue"];
+            }
+
+            const lieu = document.getElementById('choix-lieu').value;
+
+            dbMenu.forEach(p => {
+                let stockDispo = p.stock_cuisine;
+                if (lieu === "Food Truck") stockDispo = p.stock_food_truck;
+                else if (lieu === "Salle Event") stockDispo = p.stock_event;
+                else if (lieu === "Bureau") stockDispo = p.stock_bureau;
+
+                let infoRupture = (stockDispo <= 0 && lieu !== "Livraison") ? " ⚠️(Rupture)" : "";
+                let cat = p.categorie.toLowerCase().trim();
+                let nomP = p.nom.toLowerCase().trim();
+                let optionHTML = `<option value="${p.nom}">${p.nom}${infoRupture}</option>`;
+
+                if (cat.includes("plat") && nomP !== "frites") {
+                    if (platsAutorises.length === 0 || platsAutorises.includes(nomP)) {
+                        selPlat.innerHTML += optionHTML;
+                    }
                 }
-                btn.innerHTML = `<span class="prod-nom">${prod.nom}</span><span class="prod-prix">${prod.prix} $</span>${htmlStock}`;
-                prodContainer.appendChild(btn);
+                if (cat === catBoissonRequise) {
+                    selBoisson.innerHTML += optionHTML;
+                }
+                if (avecDessert && cat.includes("dessert")) {
+                    selDessert.innerHTML += optionHTML;
+                }
             });
+
+            document.getElementById("modal-menu").style.display = "flex";
         }
 
-        function ouvrirModalMenu(nomMenu, prix) {
-            menuEnCours = { nom: nomMenu, prix: prix, config: listeMenus[nomMenu] }; document.getElementById("modal-titre").innerText = nomMenu.toUpperCase(); let htmlChoix = "";
-            menuEnCours.config.etapes.forEach((etape, index) => {
-                htmlChoix += `<label>${etape.titre}</label><select id="choix-menu-${index}">`;
-                let optionsPossibles = etape.options === "TOUS_LES_PLATS" ? menuComplet.filter(p => p.categorie.toLowerCase().includes("plat")).map(p => p.nom) : etape.options;
-                optionsPossibles.forEach(opt => { htmlChoix += `<option value="${opt}">${opt}</option>`; }); htmlChoix += `</select>`;
-            });
-            document.getElementById("modal-choix").innerHTML = htmlChoix; document.getElementById("modal-menu").style.display = "flex";
+        function fermerModal() {
+            document.getElementById("modal-menu").style.display = "none";
+            menuEnCoursDeComposition = null;
         }
-
-        function fermerModal() { document.getElementById("modal-menu").style.display = "none"; menuEnCours = null; }
 
         function validerMenu() {
-            let listePourStock = []; let resumeTicket = [];
-            menuEnCours.config.etapes.forEach((etape, index) => { let choix = document.getElementById(`choix-menu-${index}`).value; listePourStock.push(choix); resumeTicket.push(choix); });
-            if (menuEnCours.config.fixes) { menuEnCours.config.fixes.forEach(fixe => { listePourStock.push(fixe); }); }
-            ajouterProduitFinal(`${menuEnCours.nom} (${resumeTicket.join(" + ")})`, menuEnCours.prix, listePourStock); fermerModal(); 
-        }
+            let plat = document.getElementById("choix-plat").value;
+            let boisson = document.getElementById("choix-boisson").value;
+            let dessert = document.getElementById("choix-dessert").value;
+            let requiresDessert = document.getElementById("container-dessert").style.display !== "none";
+            let qteDemandee = parseInt(document.getElementById("choix-qte").value) || 1;
 
-        function ajouterProduitFinal(nomTicket, prix, elementsADeduire) {
-            const lieu = document.getElementById('choix-lieu').value;
-            for (let i = 0; i < elementsADeduire.length; i++) {
-                let nomComposant = String(elementsADeduire[i]).trim().toLowerCase(); let prodInfo = menuComplet.find(p => String(p.nom).trim().toLowerCase() === nomComposant);
-                if (!prodInfo) { afficherMessage(`⚠️ ERREUR : Produit [ ${elementsADeduire[i]} ] introuvable.`, "error"); return; }
-                let stockMax = (lieu === "Food Truck") ? prodInfo.stock_food_truck : prodInfo.stock_cuisine; let qteDejaEnPanier = 0;
-                panier.forEach(item => { item.articlesADeduire.forEach(art => { if (String(art).trim().toLowerCase() === nomComposant) qteDejaEnPanier += item.quantite; }); });
-                if (qteDejaEnPanier >= stockMax) { afficherMessage(`❌ IMPOSSIBLE : [ ${prodInfo.nom.toUpperCase()} ] est en rupture !`, "error"); return; }
+            if (!plat || !boisson || (requiresDessert && !dessert)) {
+                afficherMessage("Veuillez sélectionner toutes les options du menu !", "warning");
+                return;
             }
-            let articleExistant = panier.find(item => item.nom === nomTicket); if(articleExistant) { articleExistant.quantite++; } else { panier.push({ nom: nomTicket, prix: prix, quantite: 1, articlesADeduire: elementsADeduire }); }
-            mettreAJourTicket();
+
+            let composition = [plat, boisson];
+            if (requiresDessert) composition.push(dessert);
+
+            if (menuEnCoursDeComposition.articlesForces) {
+                menuEnCoursDeComposition.articlesForces.forEach(forceNom => {
+                    let exactItem = dbMenu.find(p => p.nom.toLowerCase().trim() === forceNom);
+                    if (exactItem) composition.push(exactItem.nom);
+                });
+            }
+
+            ajouterAuPanier(menuEnCoursDeComposition, composition, qteDemandee);
+            fermerModal();
         }
 
-        function retirerDuPanier(index) { panier.splice(index, 1); mettreAJourTicket(); }
+        // --- GESTION PANIER ---
+        function ajouterAuPanier(produit, composition = null, quantiteAjoutee = 1) {
+            let cleUnique = produit.nom;
+            let texteComposition = "";
+            
+            if (composition) {
+                cleUnique += "_" + composition.join("_");
+                texteComposition = `<br><small style="color:#00cccc;">(${composition.join(' + ')})</small>`;
+            }
 
-        function mettreAJourTicket() {
-            const ticketListe = document.getElementById('ticket-liste'); ticketListe.innerHTML = ''; let total = 0;
-            panier.forEach((item, index) => { let totalLigne = item.prix * item.quantite; total += totalLigne;
-                let div = document.createElement('div'); div.className = 'ticket-item';
-                div.innerHTML = `<span>${item.quantite}x ${item.nom}</span><span>${totalLigne}$ <button class="btn-remove" onclick="retirerDuPanier(${index})">X</button></span>`;
-                ticketListe.appendChild(div);
+            let item = panier.find(p => p.cle === cleUnique);
+            if (item) { 
+                item.quantite += quantiteAjoutee; 
+            } else { 
+                panier.push({ 
+                    cle: cleUnique,
+                    nom: produit.nom, 
+                    prix: produit.prix, 
+                    quantite: quantiteAjoutee, 
+                    articlesADeduire: composition ? composition : [produit.nom],
+                    affichage: texteComposition
+                }); 
+            }
+            majPanier();
+        }
+
+        function retirerDuPanier(index) {
+            panier.splice(index, 1);
+            majPanier();
+        }
+
+        // --- FONCTION OFFRIR ---
+        function offrirArticle(index) {
+            panier[index].prix = 0;
+            // On ajoute la mention "OFFERT" en vert à l'affichage du produit
+            panier[index].affichage = (panier[index].affichage || "") + ' <br><span style="color:#00ff88; font-weight:bold;">[OFFERT]</span>';
+            majPanier();
+        }
+
+        function majPanier() {
+            const liste = document.getElementById('panier-liste');
+            let total = 0;
+            liste.innerHTML = "";
+
+            // Vérification du rôle pour afficher ou non le bouton Cadeau
+            let rolesPouvantOffrir = ["gérant", "gerant", "co-gérant", "co-gerant", "manager"];
+            let gradeActuelPropre = employeGrade.toLowerCase().trim();
+            let estAutoriseAOffrir = rolesPouvantOffrir.includes(gradeActuelPropre);
+
+            panier.forEach((item, index) => {
+                total += (item.prix * item.quantite);
+                
+                // Si l'employé a le droit ET que le prix n'est pas déjà à 0, on crée le bouton
+                let btnOffrirHTML = "";
+                if (estAutoriseAOffrir && item.prix > 0) {
+                    btnOffrirHTML = `<button class="btn-offrir" onclick="offrirArticle(${index})" title="Offrir ce produit">🎁</button>`;
+                }
+
+                liste.innerHTML += `
+                    <li class="panier-item">
+                        <div class="item-details">
+                            <span class="item-qte">${item.quantite}x</span>
+                            <span>${item.nom} ${item.affichage || ""}</span>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <div style="margin-right: 15px; font-weight: bold;">${item.prix * item.quantite}$</div>
+                            ${btnOffrirHTML}
+                            <button class="btn-suppr" onclick="retirerDuPanier(${index})">X</button>
+                        </div>
+                    </li>
+                `;
             });
-            document.getElementById('total-prix').innerText = total;
+            document.getElementById('prix-total').innerText = total;
+            let payBtnDisabled = panier.length === 0;
+            document.getElementById('btn-esp').disabled = payBtnDisabled;
+            document.getElementById('btn-cb').disabled = payBtnDisabled;
         }
 
-        function validerCommande() {
-            if(panier.length === 0) return afficherMessage("Le ticket est vide !", "warning");
-            const btnValider = document.getElementById('btn-valider'); btnValider.innerText = "ENVOI EN COURS..."; btnValider.style.background = "#ffcc00";
-            let resumeArticles = panier.map(item => `${item.quantite}x ${item.nom}`).join("\n");
-            const fd = new URLSearchParams(); fd.append("action", "nouvelleVente"); fd.append("nom", nomEmploye); fd.append("articles", resumeArticles); fd.append("total", document.getElementById('total-prix').innerText); fd.append("paiement", document.getElementById('choix-paiement').value); fd.append("lieu", document.getElementById('choix-lieu').value); fd.append("panier", JSON.stringify(panier));
-            fetch(urlWebScript, { method: 'POST', body: fd }).then(r => r.json()).then(data => {
-                if(data.statut === "succes") { afficherMessage("✅ Vente enregistrée !", "success"); setTimeout(function() { window.location.reload(); }, 2000); }
-            }).catch(() => { afficherMessage("❌ Erreur d'enregistrement", "error"); btnValider.innerText = "VALIDER LA COMMANDE"; btnValider.style.background = "#00cccc"; });
+        function validerPaiement(moyen) {
+            if (panier.length === 0) return;
+
+            document.getElementById('btn-esp').disabled = true;
+            document.getElementById('btn-cb').disabled = true;
+            document.getElementById('btn-esp').innerText = "ENVOI...";
+
+            let articlesStr = panier.map(p => p.quantite + "x " + p.nom).join(", ");
+            let totalVal = document.getElementById('prix-total').innerText;
+            let lieuVal = document.getElementById('choix-lieu').value;
+
+            const fd = new URLSearchParams();
+            fd.append("action", "nouvelleVente");
+            fd.append("nom", nomEmploye);
+            fd.append("articles", articlesStr);
+            fd.append("total", totalVal);
+            fd.append("paiement", moyen);
+            fd.append("lieu", lieuVal);
+            fd.append("panier", JSON.stringify(panier));
+
+            fetch(urlWebScript, { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if(data.statut === "succes") {
+                    afficherMessage("✅ Vente enregistrée !", "success");
+                    panier = []; majPanier();
+                    // Recharge pour maj stock
+                    const fdRefresh = new URLSearchParams({ action: "getMenu", nom: nomEmploye });
+                    fetch(urlWebScript, { method: 'POST', body: fdRefresh })
+                    .then(r => r.json()).then(newData => { dbMenu = newData.menu; rafraichirLieu(); });
+                }
+            })
+            .finally(() => {
+                document.getElementById('btn-esp').innerText = "ESPÈCES";
+            });
         }
     </script>
 </body>
