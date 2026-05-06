@@ -59,7 +59,7 @@
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
         #toast.success { border-bottom: 4px solid #00ff00; }
         #toast.error { border-bottom: 4px solid #ff4444; }
-        #toast.warning { border-bottom: 4px solid #ffcc00; color: #ffcc00; }
+        #toast.warning { border-bottom: 4px solid #ffcc00; color: #111; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: #1e1e1e; padding: 25px; border-radius: 10px; border: 2px solid #00cccc; width: 400px; box-shadow: 0 0 20px rgba(0, 204, 204, 0.3); }
@@ -92,7 +92,7 @@
 
         <div class="right-panel">
             <select id="choix-lieu" class="lieu-select" onchange="rafraichirLieu()">
-                <option value="Cuisine/Resto">Restaurant (Stock Cuisine)</option>
+                <option value="Cuisine/Resto">Restaurant (Stock Cuisine + Bureau)</option>
                 <option value="Salle Event">Salle de Réception</option>
                 <option value="Food Truck">Food Truck</option>
                 <option value="Bureau">Bureau</option>
@@ -150,7 +150,7 @@
         const urlWebScript = "https://script.google.com/macros/s/AKfycbzWazFTem8QxSrOi3Ie4nrI1yOUIqqdspd92UZtxdiY25G5K2GMkFVgrZOAXKkx4Bok/exec";
         
         let nomEmploye = new URLSearchParams(window.location.search).get("nom") || "Inconnu";
-        let employeGrade = "Employé"; // Sera mis à jour par le serveur
+        let employeGrade = "Employé"; 
         
         let dbMenu = [];
         let panier = [];
@@ -168,7 +168,6 @@
         }
 
         window.onload = function() {
-            // On envoie le nom pour récupérer le grade en même temps que le menu
             const fd = new URLSearchParams({ action: "getMenu", nom: nomEmploye });
             fetch(urlWebScript, { method: 'POST', body: fd })
             .then(r => r.json()).then(data => {
@@ -217,9 +216,6 @@
             panier = []; majPanier();
         }
 
-        <script>
-        // ... [GARDER LES VARIABLES ET FONCTIONS DE CHARGEMENT] ...
-
         function afficherProduits(categorie) {
             categorieActuelle = categorie;
             const container = document.getElementById('produits-container');
@@ -230,10 +226,9 @@
             let isCategorieMenu = (categorie.toLowerCase().trim() === "menu");
 
             produitsFiltres.forEach(prod => {
-                // --- CALCUL DU STOCK DISPONIBLE SELON LE LIEU ---
                 let stockDispo = 0;
+                // Calcul fusionné pour le restaurant
                 if (lieu === "Cuisine/Resto") {
-                    // ON ADDITIONNE LES DEUX POUR LE RESTAURANT
                     stockDispo = (parseInt(prod.stock_cuisine) || 0) + (parseInt(prod.stock_bureau) || 0);
                 } else if (lieu === "Food Truck") {
                     stockDispo = prod.stock_food_truck;
@@ -269,17 +264,12 @@
             });
         }
 
-        // [GARDER TOUT LE RESTE DU CODE IDENTIQUE : PANIER, POPUP, PAIEMENT]
-    </script>
-</body>
-</html>
-
         // --- GESTION INTELLIGENTE DU POPUP MENU ---
         function ouvrirPopupMenu(prod) {
             menuEnCoursDeComposition = prod;
             let nomMenu = prod.nom.toLowerCase().trim();
             document.getElementById("modal-titre").innerText = prod.nom.toUpperCase();
-            document.getElementById("choix-qte").value = 1; // Reset de la quantité
+            document.getElementById("choix-qte").value = 1; 
             
             let selPlat = document.getElementById("choix-plat");
             let selBoisson = document.getElementById("choix-boisson");
@@ -328,10 +318,17 @@
             const lieu = document.getElementById('choix-lieu').value;
 
             dbMenu.forEach(p => {
-                let stockDispo = p.stock_cuisine;
-                if (lieu === "Food Truck") stockDispo = p.stock_food_truck;
-                else if (lieu === "Salle Event") stockDispo = p.stock_event;
-                else if (lieu === "Bureau") stockDispo = p.stock_bureau;
+                let stockDispo = 0;
+                // Calcul fusionné pour le restaurant à l'intérieur du popup aussi !
+                if (lieu === "Cuisine/Resto") {
+                    stockDispo = (parseInt(p.stock_cuisine) || 0) + (parseInt(p.stock_bureau) || 0);
+                } else if (lieu === "Food Truck") {
+                    stockDispo = p.stock_food_truck;
+                } else if (lieu === "Salle Event") {
+                    stockDispo = p.stock_event;
+                } else if (lieu === "Bureau") {
+                    stockDispo = p.stock_bureau;
+                }
 
                 let infoRupture = (stockDispo <= 0 && lieu !== "Livraison") ? " ⚠️(Rupture)" : "";
                 let cat = p.categorie.toLowerCase().trim();
@@ -419,7 +416,6 @@
         // --- FONCTION OFFRIR ---
         function offrirArticle(index) {
             panier[index].prix = 0;
-            // On ajoute la mention "OFFERT" en vert à l'affichage du produit
             panier[index].affichage = (panier[index].affichage || "") + ' <br><span style="color:#00ff88; font-weight:bold;">[OFFERT]</span>';
             majPanier();
         }
@@ -429,7 +425,6 @@
             let total = 0;
             liste.innerHTML = "";
 
-            // Vérification du rôle pour afficher ou non le bouton Cadeau
             let rolesPouvantOffrir = ["gérant", "gerant", "co-gérant", "co-gerant", "manager"];
             let gradeActuelPropre = employeGrade.toLowerCase().trim();
             let estAutoriseAOffrir = rolesPouvantOffrir.includes(gradeActuelPropre);
@@ -437,7 +432,6 @@
             panier.forEach((item, index) => {
                 total += (item.prix * item.quantite);
                 
-                // Si l'employé a le droit ET que le prix n'est pas déjà à 0, on crée le bouton
                 let btnOffrirHTML = "";
                 if (estAutoriseAOffrir && item.prix > 0) {
                     btnOffrirHTML = `<button class="btn-offrir" onclick="offrirArticle(${index})" title="Offrir ce produit">🎁</button>`;
@@ -489,7 +483,6 @@
                 if(data.statut === "succes") {
                     afficherMessage("✅ Vente enregistrée !", "success");
                     panier = []; majPanier();
-                    // Recharge pour maj stock
                     const fdRefresh = new URLSearchParams({ action: "getMenu", nom: nomEmploye });
                     fetch(urlWebScript, { method: 'POST', body: fdRefresh })
                     .then(r => r.json()).then(newData => { dbMenu = newData.menu; rafraichirLieu(); });
