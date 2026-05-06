@@ -7,7 +7,6 @@
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
         
-        /* BARRE DE NAVIGATION */
         .top-bar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px 25px; border-bottom: 2px solid #ff9900; }
         .top-bar-title { font-size: 20px; font-weight: bold; color: #ff9900; letter-spacing: 2px; }
         .top-bar-user { margin-left: 20px; color: #aaa; font-size: 16px; }
@@ -16,7 +15,6 @@
 
         .hub-box { background: #1e1e1e; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); width: 450px; border-top: 4px solid #ff9900; margin-top: 60px; }
         
-        /* ONGLETS */
         .tabs { display: flex; gap: 10px; margin-bottom: 25px; justify-content: center; }
         .tab-btn { flex: 1; background: #333; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 12px; }
         .tab-btn.active { background: #ff9900; color: #111; }
@@ -43,7 +41,7 @@
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
         #toast.success { border-bottom: 4px solid #00ff00; }
         #toast.error { border-bottom: 4px solid #ff4444; }
-        #toast.warning { border-bottom: 4px solid #ffcc00; color: #ffcc00; }
+        #toast.warning { border-bottom: 4px solid #ffcc00; color: #111; }
     </style>
 </head>
 <body>
@@ -64,11 +62,10 @@
 
     <div class="hub-box" id="hub-container" style="display: none;">
         
-        <!-- LES ONGLETS -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('tab-prep', this)">PRÉPARATION</button>
             <button class="tab-btn" onclick="switchTab('tab-trans', this)">TRANSFERTS</button>
-            <button class="tab-btn" onclick="switchTab('tab-rec', this)">COURSES</button>
+            <button class="tab-btn" onclick="switchTab('tab-inv', this)">INVENTAIRE (+/-)</button>
         </div>
 
         <!-- ONGLET 1 : PREPARATION -->
@@ -79,36 +76,29 @@
             <select id="prep-plat"></select>
             <label>Quantité :</label>
             <input type="number" id="prep-qte" min="1" value="1">
-            <button class="btn-action" id="btn-prep" onclick="cuisiner()">METTRE EN STOCK (CUISINE)</button>
+            <button class="btn-action" id="btn-prep" onclick="cuisiner()">METTRE EN STOCK</button>
         </div>
 
         <!-- ONGLET 2 : TRANSFERTS -->
         <div id="tab-trans" class="tab-content">
             <h2>MOUVEMENT DE STOCK</h2>
-            <p class="desc">Déplacer des produits finis entre les stocks</p>
+            <label>Qu'est-ce qu'on déplace ?</label>
+            <select id="trans-type" onchange="updateTransUI()">
+                <option value="catalogue">🥤 Produit Fini / Boisson (Catalogue)</option>
+                <option value="ingredient">🍅 Ingrédient Brut (Huile, Patates...)</option>
+            </select>
+
             <label>Produit à déplacer :</label>
             <select id="trans-produit"></select>
             
             <div class="flex-row">
                 <div>
                     <label>Depuis (Source) :</label>
-                    <select id="trans-source">
-                        <option value="cuisine">Stock Cuisine</option>
-                        <option value="camion">Stock Camion</option>
-                        <option value="foodtruck">Stock Food Truck</option>
-                        <option value="bureau">Stock Bureau</option>
-                        <option value="event">Stock Event (Salle haut)</option>
-                    </select>
+                    <select id="trans-source"></select>
                 </div>
                 <div>
                     <label>Vers (Dest.) :</label>
-                    <select id="trans-dest">
-                        <option value="camion">Stock Camion</option>
-                        <option value="cuisine">Stock Cuisine</option>
-                        <option value="foodtruck">Stock Food Truck</option>
-                        <option value="bureau">Stock Bureau</option>
-                        <option value="event">Stock Event (Salle haut)</option>
-                    </select>
+                    <select id="trans-dest"></select>
                 </div>
             </div>
             
@@ -117,34 +107,37 @@
             <button class="btn-action" id="btn-trans" onclick="transferer()">EFFECTUER LE TRANSFERT</button>
         </div>
 
-        <!-- ONGLET 3 : COURSES -->
-        <div id="tab-rec" class="tab-content">
-            <h2>RÉCEPTION</h2>
-            <p class="desc">Entrer les achats (Ingrédients ou Produits) dans l'appli</p>
+        <!-- ONGLET 3 : INVENTAIRE (+/-) -->
+        <div id="tab-inv" class="tab-content">
+            <h2>GESTION INVENTAIRE</h2>
+            <p class="desc">Ajouter (Courses) ou Retirer (Bug jeu / Périmé)</p>
             
-            <label>Type d'achat :</label>
-            <select id="rec-type" onchange="updateCourseUI()">
-                <option value="ingredient">🍅 Ingrédient brut (Va au Frigo)</option>
-                <option value="catalogue">🥤 Produit Fini / Boisson (Catalogue)</option>
-            </select>
-            
-            <label>Produit acheté :</label>
-            <select id="rec-produit"></select>
-            
-            <div id="rec-dest-container" style="display: none;">
-                <label>Ranger la marchandise dans :</label>
-                <select id="rec-dest">
-                    <option value="cuisine">Stock Cuisine</option>
-                    <option value="camion">Stock Camion</option>
-                    <option value="foodtruck">Stock Food Truck</option>
-                    <option value="bureau">Stock Bureau</option>
-                    <option value="event">Stock Event (Salle haut)</option>
-                </select>
+            <div class="flex-row">
+                <div>
+                    <label>Action :</label>
+                    <select id="inv-mode" style="background:#444; border-color:#00cccc;" onchange="changerCouleurBouton()">
+                        <option value="ajouter">➕ Ajouter (Courses)</option>
+                        <option value="retirer">➖ Retirer (Perte/Bug)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Type de produit :</label>
+                    <select id="inv-type" onchange="updateInvUI()">
+                        <option value="ingredient">🍅 Ingrédient</option>
+                        <option value="catalogue">🥤 Produit Fini</option>
+                    </select>
+                </div>
             </div>
+
+            <label>Produit ciblé :</label>
+            <select id="inv-produit"></select>
             
-            <label>Quantité reçue :</label>
-            <input type="number" id="rec-qte" min="1" value="1">
-            <button class="btn-action" id="btn-rec" onclick="ajouterCourse()">ENREGISTRER LA COURSE</button>
+            <label>Dans quel lieu ?</label>
+            <select id="inv-dest"></select>
+            
+            <label>Quantité :</label>
+            <input type="number" id="inv-qte" min="1" value="1">
+            <button class="btn-action" id="btn-inv" style="background:#00cccc; color:black;" onclick="modifierInventaire()">VALIDER L'INVENTAIRE</button>
         </div>
 
     </div>
@@ -165,7 +158,6 @@
 
         function allerEnCaisse() { window.location.href = "caisse.html?nom=" + encodeURIComponent(nomEmploye); }
         function deconnexion() {
-            afficherMessage("Déconnexion...", "warning");
             fetch(urlWebScript, { method: 'POST', body: new URLSearchParams({action: "logout", nom: nomEmploye}) }).finally(() => window.location.href = "index.html");
         }
 
@@ -185,10 +177,8 @@
                     const selPrep = document.getElementById('prep-plat');
                     data.plats.forEach(p => selPrep.innerHTML += `<option value="${p}">${p.toUpperCase()}</option>`);
                     
-                    const selTrans = document.getElementById('trans-produit');
-                    dbCatalogue.forEach(p => selTrans.innerHTML += `<option value="${p.nom}">${p.nom.toUpperCase()} (Cuis:${p.s_cuis} | Cam:${p.s_cam} | FT:${p.s_ft} | Bur:${p.s_bur} | Ev:${p.s_ev})</option>`);
-                    
-                    updateCourseUI(); 
+                    updateTransUI();
+                    updateInvUI();
 
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('hub-container').style.display = 'block';
@@ -196,18 +186,48 @@
             });
         };
 
-        function updateCourseUI() {
-            const type = document.getElementById('rec-type').value;
-            const selProd = document.getElementById('rec-produit');
-            selProd.innerHTML = "";
+        // UI POUR TRANSFERTS
+        function updateTransUI() {
+            const type = document.getElementById('trans-type').value;
+            const selProd = document.getElementById('trans-produit');
+            const selSource = document.getElementById('trans-source');
+            const selDest = document.getElementById('trans-dest');
             
+            selProd.innerHTML = ""; selSource.innerHTML = ""; selDest.innerHTML = "";
+
             if (type === "ingredient") {
-                document.getElementById('rec-dest-container').style.display = 'none';
-                dbIngredients.forEach(i => selProd.innerHTML += `<option value="${i.nom}">${i.nom.toUpperCase()}</option>`);
+                dbIngredients.forEach(i => selProd.innerHTML += `<option value="${i.nom}">${i.nom.toUpperCase()} (Cuis:${i.s_cuis} | Bur:${i.s_bur})</option>`);
+                let optionsLieux = `<option value="bureau">Stock Bureau</option><option value="cuisine">Stock Cuisine</option>`;
+                selSource.innerHTML = optionsLieux; selDest.innerHTML = optionsLieux;
             } else {
-                document.getElementById('rec-dest-container').style.display = 'block';
-                dbCatalogue.forEach(c => selProd.innerHTML += `<option value="${c.nom}">${c.nom.toUpperCase()}</option>`);
+                dbCatalogue.forEach(c => selProd.innerHTML += `<option value="${c.nom}">${c.nom.toUpperCase()} (Cuis:${c.s_cuis} | Cam:${c.s_cam} | FT:${c.s_ft} | Bur:${c.s_bur} | Ev:${c.s_ev})</option>`);
+                let optionsLieux = `<option value="cuisine">Stock Cuisine</option><option value="camion">Stock Camion</option><option value="foodtruck">Stock Food Truck</option><option value="bureau">Stock Bureau</option><option value="event">Stock Event (Salle haut)</option>`;
+                selSource.innerHTML = optionsLieux; selDest.innerHTML = optionsLieux;
             }
+        }
+
+        // UI POUR INVENTAIRE
+        function updateInvUI() {
+            const type = document.getElementById('inv-type').value;
+            const selProd = document.getElementById('inv-produit');
+            const selDest = document.getElementById('inv-dest');
+            
+            selProd.innerHTML = ""; selDest.innerHTML = "";
+
+            if (type === "ingredient") {
+                dbIngredients.forEach(i => selProd.innerHTML += `<option value="${i.nom}">${i.nom.toUpperCase()}</option>`);
+                selDest.innerHTML = `<option value="bureau">Stock Bureau</option><option value="cuisine">Stock Cuisine</option>`;
+            } else {
+                dbCatalogue.forEach(c => selProd.innerHTML += `<option value="${c.nom}">${c.nom.toUpperCase()}</option>`);
+                selDest.innerHTML = `<option value="cuisine">Stock Cuisine</option><option value="camion">Stock Camion</option><option value="foodtruck">Stock Food Truck</option><option value="bureau">Stock Bureau</option><option value="event">Stock Event (Salle haut)</option>`;
+            }
+        }
+
+        function changerCouleurBouton() {
+            const btn = document.getElementById("btn-inv");
+            const mode = document.getElementById("inv-mode").value;
+            if (mode === "ajouter") { btn.style.background = "#00cccc"; btn.style.color = "black"; } 
+            else { btn.style.background = "#ff4444"; btn.style.color = "white"; }
         }
 
         function requeteServeur(action, formData, btnId, texteOriginal) {
@@ -231,11 +251,12 @@
 
         function cuisiner() {
             const fd = new URLSearchParams({ plat: document.getElementById("prep-plat").value, quantite: document.getElementById("prep-qte").value });
-            requeteServeur("cuisinerPlat", fd, "btn-prep", "METTRE EN STOCK (CUISINE)");
+            requeteServeur("cuisinerPlat", fd, "btn-prep", "METTRE EN STOCK");
         }
 
         function transferer() {
             const fd = new URLSearchParams({
+                typeProd: document.getElementById("trans-type").value,
                 produit: document.getElementById("trans-produit").value,
                 quantite: document.getElementById("trans-qte").value,
                 source: document.getElementById("trans-source").value,
@@ -244,14 +265,15 @@
             requeteServeur("transfererStock", fd, "btn-trans", "EFFECTUER LE TRANSFERT");
         }
 
-        function ajouterCourse() {
-            const type = document.getElementById("rec-type").value;
+        function modifierInventaire() {
             const fd = new URLSearchParams({
-                produit: document.getElementById("rec-produit").value,
-                quantite: document.getElementById("rec-qte").value,
-                dest: (type === "ingredient") ? "ingredient" : document.getElementById("rec-dest").value
+                typeProd: document.getElementById("inv-type").value,
+                produit: document.getElementById("inv-produit").value,
+                quantite: document.getElementById("inv-qte").value,
+                dest: document.getElementById("inv-dest").value,
+                mode: document.getElementById("inv-mode").value
             });
-            requeteServeur("ajouterCourse", fd, "btn-rec", "ENREGISTRER LA COURSE");
+            requeteServeur("modifierInventaire", fd, "btn-inv", "VALIDER L'INVENTAIRE");
         }
     </script>
 </body>
