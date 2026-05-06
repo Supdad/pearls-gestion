@@ -217,6 +217,9 @@
             panier = []; majPanier();
         }
 
+        <script>
+        // ... [GARDER LES VARIABLES ET FONCTIONS DE CHARGEMENT] ...
+
         function afficherProduits(categorie) {
             categorieActuelle = categorie;
             const container = document.getElementById('produits-container');
@@ -227,10 +230,18 @@
             let isCategorieMenu = (categorie.toLowerCase().trim() === "menu");
 
             produitsFiltres.forEach(prod => {
-                let stockDispo = prod.stock_cuisine;
-                if (lieu === "Food Truck") stockDispo = prod.stock_food_truck;
-                else if (lieu === "Salle Event") stockDispo = prod.stock_event;
-                else if (lieu === "Bureau") stockDispo = prod.stock_bureau;
+                // --- CALCUL DU STOCK DISPONIBLE SELON LE LIEU ---
+                let stockDispo = 0;
+                if (lieu === "Cuisine/Resto") {
+                    // ON ADDITIONNE LES DEUX POUR LE RESTAURANT
+                    stockDispo = (parseInt(prod.stock_cuisine) || 0) + (parseInt(prod.stock_bureau) || 0);
+                } else if (lieu === "Food Truck") {
+                    stockDispo = prod.stock_food_truck;
+                } else if (lieu === "Salle Event") {
+                    stockDispo = prod.stock_event;
+                } else if (lieu === "Bureau") {
+                    stockDispo = prod.stock_bureau;
+                }
 
                 let textStock = (lieu === "Livraison") ? "Stock non géré" : `En stock : ${stockDispo}`;
                 if (isCategorieMenu) textStock = "Composé à la commande";
@@ -249,7 +260,7 @@
                     if (isCategorieMenu) {
                         ouvrirPopupMenu(prod);
                     } else if (stockDispo > 0 || lieu === "Livraison") {
-                        ajouterAuPanier(prod, null, 1); // 1 par défaut pour les produits simples
+                        ajouterAuPanier(prod, null, 1);
                     } else {
                         afficherMessage("Stock épuisé dans ce lieu !", "error");
                     }
@@ -257,6 +268,11 @@
                 container.appendChild(div);
             });
         }
+
+        // [GARDER TOUT LE RESTE DU CODE IDENTIQUE : PANIER, POPUP, PAIEMENT]
+    </script>
+</body>
+</html>
 
         // --- GESTION INTELLIGENTE DU POPUP MENU ---
         function ouvrirPopupMenu(prod) {
